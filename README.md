@@ -6,26 +6,17 @@ It works the way Particulars does, and adds a few things: a public IP lookup (of
 
 ## Install
 
-You need macOS 13 Ventura or newer and Apple's free developer tools.
+Open Terminal (in Applications › Utilities) and paste:
 
-1. Open Terminal and check for the developer tools:
+```
+bash <(curl -fsSL https://raw.githubusercontent.com/mmzeller/nameplate/main/install.sh)
+```
 
-   ```
-   xcode-select -p
-   ```
+That downloads the latest version, puts it in Applications and starts it. At the end it offers to add the `nameplate` Terminal command, which needs your Mac password. Settings open the first time Nameplate runs.
 
-   If that prints an error instead of a path, run `xcode-select --install`, click Install, and wait for it to finish.
+**Prefer clicking?** Download **Nameplate.dmg** from the [latest release](https://github.com/mmzeller/nameplate/releases/latest), open it and drag Nameplate into Applications. The first time you open it, macOS says it can't verify the app, because it isn't signed with a paid Apple developer certificate. Click **Done**, open **System Settings › Privacy & Security**, scroll down and click **Open Anyway**. The Terminal command above skips that step.
 
-2. Download Nameplate and build it:
-
-   ```
-   git clone https://github.com/mmzeller/nameplate.git ~/Nameplate
-   bash ~/Nameplate/build.sh
-   ```
-
-   That compiles Nameplate, puts it in Applications, links the `nameplate` Terminal command, and starts it. The first build takes a minute or two. Settings open the first time it runs.
-
-To compile without installing, use `bash ~/Nameplate/build.sh --no-install`; the app ends up in `~/Nameplate/build`.
+Works on Apple silicon and Intel Macs with macOS 13 Ventura or newer.
 
 ## The four ways to use it
 
@@ -60,15 +51,24 @@ Nothing, unless you turn on **Public IP address**. Then Nameplate asks api.ipify
 
 ## Update
 
+Run the install command again. It quits the running copy, puts the new one in its place and starts it. Your settings are kept. macOS may ask again about Location Services after an update.
+
+## Build it yourself
+
+You need Apple's free developer tools. Run `xcode-select -p` in Terminal; if it prints an error instead of a path, run `xcode-select --install` first. Then:
+
 ```
-bash ~/Nameplate/update.sh
+git clone https://github.com/mmzeller/nameplate.git ~/Nameplate
+bash ~/Nameplate/build.sh
 ```
 
-That gets the latest code from GitHub, rebuilds it, quits the running copy, replaces it and starts it again. Your settings are kept. Rebuilding changes the ad hoc signature, so macOS may ask again about Location Services.
+To update a copy you built, run `bash ~/Nameplate/update.sh`. To compile without installing, use `bash ~/Nameplate/build.sh --no-install`; the app ends up in `~/Nameplate/build`.
+
+GitHub also builds Nameplate on every change (see the Actions tab). When the version number in `Sources/NameplateCore/Models.swift` goes up, that build is published as a new release, and the install command picks it up.
 
 ## Uninstall
 
-Quit Nameplate (right-click the menu bar icon › Quit), then:
+Quit Nameplate (right-click the menu bar icon › Quit), then run:
 
 ```
 rm -rf /Applications/Nameplate.app

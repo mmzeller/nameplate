@@ -3,16 +3,19 @@
 #
 #   bash build.sh                build, install to Applications, link the `nameplate` command, launch it
 #   bash build.sh --no-install   build only (result: build/Nameplate.app)
+#   bash build.sh --universal    one app for both Apple silicon and Intel (GitHub's build uses this)
 #
 # Needs Apple's command-line developer tools (xcode-select --install) or Xcode, macOS 13 or later.
 set -euo pipefail
 cd "$(dirname "$0")"
 
 INSTALL=1
+UNIVERSAL=0
 for arg in "$@"; do
   case "$arg" in
     --no-install) INSTALL=0 ;;
-    -h|--help) sed -n '2,7p' "$0"; exit 0 ;;
+    --universal) UNIVERSAL=1 ;;
+    -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
     *) echo "Unknown option: $arg (try --help)"; exit 1 ;;
   esac
 done
@@ -25,9 +28,12 @@ fi
 VERSION=$(sed -n 's/.*static let version = "\(.*\)".*/\1/p' Sources/NameplateCore/Models.swift)
 BUILD=$(date +%Y%m%d%H%M)
 
+ARCH_FLAGS=()
+if [ "$UNIVERSAL" = 1 ]; then ARCH_FLAGS=(--arch arm64 --arch x86_64); fi
+
 echo "==> Compiling Nameplate $VERSION (first build takes a minute or two)"
-swift build -c release
-BIN=$(swift build -c release --show-bin-path)
+swift build -c release ${ARCH_FLAGS[@]+"${ARCH_FLAGS[@]}"}
+BIN=$(swift build -c release ${ARCH_FLAGS[@]+"${ARCH_FLAGS[@]}"} --show-bin-path)
 
 APP=build/Nameplate.app
 echo "==> Assembling $APP"
