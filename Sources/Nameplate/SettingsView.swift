@@ -31,39 +31,18 @@ struct SettingsView: View {
     @ObservedObject var location: LocationHelper
 
     var body: some View {
-        VStack(spacing: 0) {
-            if Prefs.labMode {
-                HStack(spacing: 8) {
-                    Image(systemName: "lock.fill")
-                    Text("Lab mode is on, so settings are locked. An administrator can turn it off with:\nsudo defaults delete /Library/Preferences/\(NameplateInfo.bundleIdentifier) LabMode")
-                        .font(.callout)
-                        .textSelection(.enabled)
-                    Spacer(minLength: 0)
-                }
-                .padding(12)
-                .background(Color.orange.opacity(0.15))
-            }
-            TabView {
-                InformationTab(location: location)
-                    .tabItem { Label("Information", systemImage: "list.bullet.rectangle") }
-                DesktopTab()
-                    .tabItem { Label("Desktop", systemImage: "menubar.dock.rectangle") }
-                MenuBarTab()
-                    .tabItem { Label("Menu Bar", systemImage: "menubar.rectangle") }
-                GeneralTab()
-                    .tabItem { Label("General", systemImage: "gearshape") }
-            }
-            .disabled(Prefs.labMode)
-            .padding(.top, 6)
+        TabView {
+            InformationTab(location: location)
+                .tabItem { Label("Information", systemImage: "list.bullet.rectangle") }
+            DesktopTab()
+                .tabItem { Label("Desktop", systemImage: "menubar.dock.rectangle") }
+            MenuBarTab()
+                .tabItem { Label("Menu Bar", systemImage: "menubar.rectangle") }
+            GeneralTab()
+                .tabItem { Label("General", systemImage: "gearshape") }
         }
+        .padding(.top, 6)
         .frame(width: 580, height: 640)
-    }
-}
-
-private extension View {
-    /// Greys out a control when an administrator manages that setting.
-    func locked(_ key: String) -> some View {
-        disabled(Prefs.isLocked(key))
     }
 }
 
@@ -81,7 +60,6 @@ private struct ItemToggle: View {
 
     var body: some View {
         Toggle(item.title, isOn: $isOn)
-            .locked(PrefKey.item(item))
     }
 }
 
@@ -105,7 +83,6 @@ private struct InformationTab: View {
                 Picker("Disks to show", selection: $volumeScope) {
                     ForEach(VolumeScope.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                .locked(PrefKey.volumeScope)
             }
             Section("Network") {
                 ItemToggle(.interfaces)
@@ -113,12 +90,9 @@ private struct InformationTab: View {
                     Picker("Interfaces to show", selection: $interfaceScope) {
                         ForEach(InterfaceScope.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                     }
-                    .locked(PrefKey.interfaceScope)
                     ForEach(InfoItem.items(in: .network).filter(\.dependsOnInterfaces), id: \.self) { ItemToggle($0) }
                     Toggle("Include link-local IPv6 addresses (fe80::)", isOn: $showLinkLocal)
-                        .locked(PrefKey.showLinkLocalIPv6)
                     Toggle("Include temporary (privacy) IPv6 addresses", isOn: $showTemporary)
-                        .locked(PrefKey.showTemporaryIPv6)
                 }
                 .disabled(!showInterfaces)
 
@@ -174,7 +148,6 @@ private struct DesktopTab: View {
         Form {
             Section {
                 Toggle("Show information on the desktop", isOn: $showOnDesktop)
-                    .locked(PrefKey.showOnDesktop)
             } footer: {
                 Text("It sits on top of your wallpaper and under your desktop icons and windows. Your wallpaper isn't changed.")
                     .font(.caption)
@@ -185,25 +158,21 @@ private struct DesktopTab: View {
                 Picker("Position", selection: $position) {
                     ForEach(DesktopPosition.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                .locked(PrefKey.desktopPosition)
                 Picker("Show on", selection: $screens) {
                     ForEach(ScreenChoice.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                .locked(PrefKey.desktopScreens)
                 LabeledContent("Side margin") {
                     HStack {
                         Slider(value: $marginX, in: 0...400)
                         Text("\(Int(marginX)) pt").monospacedDigit().frame(width: 52, alignment: .trailing)
                     }
                 }
-                .locked(PrefKey.marginX)
                 LabeledContent("Top / bottom margin") {
                     HStack {
                         Slider(value: $marginY, in: 0...400)
                         Text("\(Int(marginY)) pt").monospacedDigit().frame(width: 52, alignment: .trailing)
                     }
                 }
-                .locked(PrefKey.marginY)
             }
             .disabled(!showOnDesktop)
 
@@ -213,26 +182,21 @@ private struct DesktopTab: View {
                     Divider()
                     ForEach(families, id: \.self) { Text($0).tag($0) }
                 }
-                .locked(PrefKey.fontFamily)
                 Picker("Weight", selection: $fontWeight) {
                     ForEach(FontWeightChoice.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                .locked(PrefKey.fontWeight)
                 LabeledContent("Size") {
                     HStack {
                         Slider(value: $fontSize, in: 9...28, step: 1)
                         Text("\(Int(fontSize)) pt").monospacedDigit().frame(width: 52, alignment: .trailing)
                     }
                 }
-                .locked(PrefKey.fontSize)
                 Picker("Color", selection: $textColor) {
                     ForEach(TextColorChoice.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
                 .pickerStyle(.segmented)
-                .locked(PrefKey.textColor)
                 if textColor == TextColorChoice.custom.rawValue {
                     ColorPicker("Custom color", selection: colorBinding, supportsOpacity: false)
-                        .locked(PrefKey.customColor)
                 }
                 LabeledContent("Opacity") {
                     HStack {
@@ -240,13 +204,9 @@ private struct DesktopTab: View {
                         Text("\(Int((opacity * 100).rounded()))%").monospacedDigit().frame(width: 52, alignment: .trailing)
                     }
                 }
-                .locked(PrefKey.textOpacity)
                 Toggle("Soft shadow behind text (easier to read on busy wallpapers)", isOn: $shadow)
-                    .locked(PrefKey.textShadow)
                 Toggle("Show labels", isOn: $showLabels)
-                    .locked(PrefKey.showLabels)
                 Toggle("Show section titles (Hardware, Status, Network)", isOn: $showSectionTitles)
-                    .locked(PrefKey.showSectionTitles)
             }
             .disabled(!showOnDesktop)
         }
@@ -279,7 +239,6 @@ private struct MenuBarTab: View {
         Form {
             Section {
                 Toggle("Show Nameplate in the menu bar", isOn: $showIcon)
-                    .locked(PrefKey.showMenuBarIcon)
             } footer: {
                 Text("Click it for the info panel. Right-click or Control-click it for the menu. If you hide it along with the desktop text and Dock icon, open Nameplate again from Applications to get back to Settings.")
                     .font(.caption)
@@ -289,15 +248,12 @@ private struct MenuBarTab: View {
                 Picker("Shows", selection: $style) {
                     ForEach(MenuBarStyle.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                .locked(PrefKey.menuBarStyle)
                 Picker("Icon", selection: $symbol) {
                     ForEach(symbols, id: \.self) { name in
                         Label(name, systemImage: name).tag(name)
                     }
                 }
-                .locked(PrefKey.menuBarSymbol)
                 Toggle("Panel can be dragged away to stay open", isOn: $detachable)
-                    .locked(PrefKey.detachablePanel)
             }
             .disabled(!showIcon)
         }
@@ -325,20 +281,16 @@ private struct GeneralTab: View {
                         launchAtLogin = LoginItem.isEnabled
                     }
                 ))
-                .locked(PrefKey.launchAtLogin)
                 Toggle("Show Dock icon", isOn: $showDockIcon)
-                    .locked(PrefKey.showDockIcon)
             }
 
             Section("Keyboard shortcuts") {
                 Picker("Copy all information", selection: $copyHotKey) {
                     ForEach(HotKeyChoice.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                .locked(PrefKey.copyHotKey)
                 Picker("Open the info panel", selection: $panelHotKey) {
                     ForEach(HotKeyChoice.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                .locked(PrefKey.panelHotKey)
             }
 
             Section {
@@ -356,13 +308,6 @@ private struct GeneralTab: View {
                 Text("Command line and Shortcuts")
             } footer: {
                 Text("In the Shortcuts app, add a “Run Shell Script” action with  /usr/local/bin/nameplate --get ip  (or serial, model, ssid, --json …). Run  nameplate --keys  in Terminal to see every value.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
-
-            Section("Lab mode") {
-                Text("For shared Macs in labs and offices. Lab mode locks these settings and removes the right-click menu (including Quit). Set it for everyone with:\nsudo defaults write /Library/Preferences/\(NameplateInfo.bundleIdentifier) LabMode -bool true\nAny setting can also be pushed and locked with a configuration profile — see the README.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)

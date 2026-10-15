@@ -86,7 +86,7 @@ final class StatusController: NSObject, NSPopoverDelegate {
     @objc private func buttonClicked(_ sender: Any?) {
         let event = NSApp.currentEvent
         let wantsMenu = event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true
-        if wantsMenu && !Prefs.labMode {
+        if wantsMenu {
             showMenu()
         } else {
             togglePanel()
@@ -149,7 +149,6 @@ final class StatusController: NSObject, NSPopoverDelegate {
         let desktop = NSMenuItem(title: "Show on Desktop", action: #selector(AppDelegate.toggleDesktopAction(_:)), keyEquivalent: "")
         desktop.state = Prefs.showOnDesktop ? .on : .off
         desktop.target = app
-        if Prefs.isLocked(PrefKey.showOnDesktop) { desktop.action = nil }
         menu.addItem(desktop)
         menu.addItem(withTitle: "Refresh", action: #selector(AppDelegate.refreshAction(_:)), keyEquivalent: "r").target = app
         menu.addItem(.separator())

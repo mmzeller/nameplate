@@ -35,19 +35,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
 
-        applyAdminManagedLoginItem()
         applyPreferences()
         store.refresh()
 
         if !Prefs.bool(PrefKey.hasLaunched) {
             Prefs.defaults.set(true, forKey: PrefKey.hasLaunched)
-            if !Prefs.labMode { showSettings() }
+            showSettings()
         }
     }
 
     /// Opening Nameplate again (from Finder, Spotlight or the Dock) shows Settings.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !Prefs.labMode { showSettings() }
+        showSettings()
         return false
     }
 
@@ -130,19 +129,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.status.showPanelAnywhere()
         }
 
-        if options.has(.interfaces) && options.has(.wifiName) && !Prefs.labMode {
+        if options.has(.interfaces) && options.has(.wifiName) {
             location.requestIfNeeded()
         }
 
         render()
-    }
-
-    /// An administrator can force launch-at-login on or off with the LaunchAtLogin key.
-    private func applyAdminManagedLoginItem() {
-        let key = PrefKey.launchAtLogin
-        guard Prefs.defaults.objectIsForced(forKey: key) || Prefs.labMode,
-              Prefs.defaults.object(forKey: key) != nil else { return }
-        LoginItem.set(Prefs.bool(key))
     }
 
     // MARK: Actions

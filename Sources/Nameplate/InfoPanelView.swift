@@ -75,14 +75,12 @@ struct InfoPanelView: View {
                 Image(systemName: "arrow.clockwise")
             }
             .help("Refresh")
-            if !Prefs.labMode {
-                Button {
-                    app?.showSettings()
-                } label: {
-                    Image(systemName: "gearshape")
-                }
-                .help("Settings")
+            Button {
+                app?.showSettings()
+            } label: {
+                Image(systemName: "gearshape")
             }
+            .help("Settings")
         }
         .buttonStyle(.borderless)
         .controlSize(.small)

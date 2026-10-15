@@ -2,7 +2,7 @@
 
 Your Mac's particulars, always in view. Nameplate shows the computer name, model, serial number, chip, memory, graphics, macOS version, current user, uptime, disk space and the full network setup — on the desktop, in the menu bar, in Shortcuts and in Terminal. It updates the moment something changes: switch Wi-Fi networks, plug in Ethernet or connect a VPN and the new addresses appear right away.
 
-It works the way Particulars does, and adds a few things: a public IP lookup (off by default), Wi-Fi signal and channel, a JSON copy, and an installer package for deploying it to many Macs.
+It works the way Particulars does, and adds a few things: a public IP lookup (off by default), Wi-Fi signal and channel, and a JSON copy.
 
 ## Install
 
@@ -25,7 +25,7 @@ You need macOS 13 Ventura or newer and Apple's free developer tools.
 
    That compiles Nameplate, puts it in Applications, links the `nameplate` Terminal command, and starts it. The first build takes a minute or two. Settings open the first time it runs.
 
-Other options: `build.sh --no-install` (just build), `build.sh --pkg` (also make an installer package), `build.sh --universal` (Apple silicon + Intel in one app; needs the full Xcode app).
+To compile without installing, use `bash ~/Nameplate/build.sh --no-install`; the app ends up in `~/Nameplate/build`.
 
 ## The four ways to use it
 
@@ -57,47 +57,6 @@ Since macOS Sonoma, apps only get the Wi-Fi network name if they're allowed to u
 ## What leaves your Mac
 
 Nothing, unless you turn on **Public IP address**. Then Nameplate asks api.ipify.org for your public address when your network changes and every 15 minutes.
-
-## Lab mode and managed Macs
-
-Every setting is an ordinary preference in the `com.mmzeller.Nameplate` domain, so you can set it for everyone:
-
-```
-sudo defaults write /Library/Preferences/com.mmzeller.Nameplate LabMode -bool true
-sudo defaults write /Library/Preferences/com.mmzeller.Nameplate DesktopPosition topRight
-```
-
-**Lab mode** locks Settings, removes the right-click menu (and with it Quit), and keeps the panel's Settings button hidden. Turn it off with `sudo defaults delete /Library/Preferences/com.mmzeller.Nameplate LabMode`.
-
-Settings delivered by a **configuration profile** (NinjaOne, Jamf, Intune and so on) are locked and greyed out in Settings even without lab mode.
-
-| Key | Values |
-|---|---|
-| `LabMode` | `true` / `false` |
-| `LaunchAtLogin` | `true` / `false` (applied at launch when managed or in lab mode) |
-| `ShowOnDesktop`, `ShowMenuBarIcon`, `ShowDockIcon` | `true` / `false` |
-| `DesktopPosition` | `topLeft`, `topRight`, `bottomLeft`, `bottomRight` |
-| `DesktopScreens` | `main`, `all` |
-| `DesktopMarginX`, `DesktopMarginY` | points, e.g. `28` |
-| `FontFamily` | `System`, `System Monospaced`, `System Rounded`, or any installed family |
-| `FontSize` | e.g. `12` |
-| `FontWeight` | `light`, `regular`, `medium`, `semibold`, `bold` |
-| `TextColor` | `light`, `dark`, `custom` (with `CustomTextColor` = `#RRGGBB`) |
-| `TextOpacity` | `0.2` – `1` |
-| `TextShadow`, `ShowLabels`, `ShowSectionTitles` | `true` / `false` |
-| `InterfaceScope` | `primary`, `active` |
-| `VolumeScope` | `startup`, `local`, `all` |
-| `MenuBarStyle` | `icon`, `iconAndIP`, `ip`, `name` |
-| `CopyHotKey`, `PanelHotKey` | `none`, `ctrlOptCmdC`, `ctrlOptCmdI`, `ctrlOptCmdN`, `ctrlOptCmdP`, `shiftOptCmdI` |
-| `Show.<item>` | `true` / `false` for each item: `computerName`, `hostName`, `model`, `modelIdentifier`, `serialNumber`, `hardwareUUID`, `chip`, `memory`, `graphics`, `os`, `server`, `user`, `uptime`, `bootTime`, `disks`, `interfaces`, `ipv4`, `subnetMask`, `router`, `configMethod`, `ipv6`, `macAddress`, `dns`, `searchDomains`, `wifiName`, `wifiSignal`, `publicIP` |
-
-### Deploying with NinjaOne
-
-1. On your Mac, run `bash ~/Nameplate/build.sh --pkg --universal` (or without `--universal` if every Mac has the same kind of chip).
-2. Upload `~/Nameplate/build/Nameplate-1.0.pkg` to NinjaOne and install it with a software deployment or a script that runs `installer -pkg Nameplate-1.0.pkg -target /`. The package installs to /Applications, links the `nameplate` command, and starts Nameplate for whoever is signed in.
-3. Push any preferences with a script running as root (the `defaults write /Library/Preferences/...` lines above) or a configuration profile.
-
-The app is signed "ad hoc" rather than with an Apple Developer certificate. Installed by a package or script, it runs normally. If you copy the .app to another Mac by hand, macOS may refuse to open it the first time; right-click it and choose Open, or clear the flag with `xattr -dr com.apple.quarantine /Applications/Nameplate.app`.
 
 ## Update
 

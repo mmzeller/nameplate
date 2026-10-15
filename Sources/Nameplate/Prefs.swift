@@ -1,8 +1,7 @@
 import AppKit
 import NameplateCore
 
-/// Preference keys. They are plain user defaults in the `com.mmzeller.Nameplate` domain,
-/// so an admin can set (and lock) any of them with `defaults write` or an MDM profile.
+/// Preference keys, stored as ordinary user defaults in the `com.mmzeller.Nameplate` domain.
 enum PrefKey {
     static let showOnDesktop = "ShowOnDesktop"
     static let desktopPosition = "DesktopPosition"
@@ -32,8 +31,6 @@ enum PrefKey {
     static let showDockIcon = "ShowDockIcon"
     static let copyHotKey = "CopyHotKey"
     static let panelHotKey = "PanelHotKey"
-    static let launchAtLogin = "LaunchAtLogin"  // only applied when set by an admin / MDM
-    static let labMode = "LabMode"
     static let hasLaunched = "HasLaunchedBefore"
 
     static func item(_ item: InfoItem) -> String { "Show." + item.rawValue }
@@ -109,21 +106,11 @@ enum Prefs {
             PrefKey.showDockIcon: false,
             PrefKey.copyHotKey: HotKeyChoice.ctrlOptCmdC.rawValue,
             PrefKey.panelHotKey: HotKeyChoice.off.rawValue,
-            PrefKey.labMode: false,
         ]
         for item in InfoItem.allCases {
             values[PrefKey.item(item)] = item.defaultOn
         }
         defaults.register(defaults: values)
-    }
-
-    // MARK: Locking
-
-    static var labMode: Bool { defaults.bool(forKey: PrefKey.labMode) }
-
-    /// True when a setting can't be changed here: lab mode is on, or an MDM profile manages it.
-    static func isLocked(_ key: String) -> Bool {
-        labMode || defaults.objectIsForced(forKey: key)
     }
 
     // MARK: Reading
