@@ -15,5 +15,7 @@ let package = Package(
         .executableTarget(name: "Nameplate", dependencies: ["NameplateCore"], path: "Sources/Nameplate"),
         // The `nameplate` command-line tool.
         .executableTarget(name: "NameplateCLI", dependencies: ["NameplateCore"], path: "Sources/NameplateCLI"),
+        // Leak, file-handle and timeout checks, run on every GitHub build.
+        .testTarget(name: "NameplateCoreTests", dependencies: ["NameplateCore"], path: "Tests/NameplateCoreTests"),
     ]
 )

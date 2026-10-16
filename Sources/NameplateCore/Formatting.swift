@@ -574,15 +574,9 @@ public enum InfoFormatter {
             add("\(iface.name).ssid", "\(iface.displayName) network", iface.wifi?.ssid)
         }
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .medium
-        dateFormatter.timeStyle = .none
-        add("date", "Date", dateFormatter.string(from: input.now))
-        dateFormatter.dateStyle = .none
-        dateFormatter.timeStyle = .short
-        add("time", "Time", dateFormatter.string(from: input.now))
-        dateFormatter.setLocalizedDateFormatFromTemplate("EEEE")
-        add("day", "Day", dateFormatter.string(from: input.now))
+        add("date", "Date", Formatters.date.string(from: input.now))
+        add("time", "Time", Formatters.time.string(from: input.now))
+        add("day", "Day", Formatters.weekday.string(from: input.now))
         return list
     }
 
@@ -712,10 +706,7 @@ public enum InfoFormatter {
     }
 
     public static func dateText(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .short
-        return f.string(from: date)
+        Formatters.dateTime.string(from: date)
     }
 
     public static func bytes(_ count: Int64) -> String {
@@ -731,10 +722,7 @@ public enum InfoFormatter {
     }
 
     static func rateText(_ bytesPerSecond: Double) -> String {
-        let formatter = ByteCountFormatter()
-        formatter.countStyle = .file
-        formatter.allowsNonnumericFormatting = false
-        return formatter.string(fromByteCount: Int64(max(0, bytesPerSecond))) + "/s"
+        Formatters.rate.string(fromByteCount: Int64(max(0, bytesPerSecond))) + "/s"
     }
 
     static func durationText(minutes: Int) -> String {
@@ -792,4 +780,42 @@ public enum InfoFormatter {
             return s.volumes
         }
     }
+}
+
+/// Formatters are costly to create, and the display redraws every couple of seconds,
+/// so they're made once. (Date and byte-count formatters are safe to share between threads.)
+enum Formatters {
+    static let date: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
+
+    static let time: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        return f
+    }()
+
+    static let weekday: DateFormatter = {
+        let f = DateFormatter()
+        f.setLocalizedDateFormatFromTemplate("EEEE")
+        return f
+    }()
+
+    static let dateTime: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
+    static let rate: ByteCountFormatter = {
+        let f = ByteCountFormatter()
+        f.countStyle = .file
+        f.allowsNonnumericFormatting = false
+        return f
+    }()
 }

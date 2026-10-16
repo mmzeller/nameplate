@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Show the tools
         run: |
@@ -42,6 +42,13 @@ jobs:
             msg=$(printf '%s' "$line" | cut -d: -f5- | sed -e 's/^ //' -e 's/%/%25/g')
             echo "::error file=${file#"$GITHUB_WORKSPACE/"},line=$row,col=$col::$msg"
           done
+
+      - name: Run the tests (memory, Mach ports, file handles, command timeouts)
+        id: test
+        shell: bash
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee test.log
 
       - name: Check the command-line tool
         id: check
@@ -77,6 +84,64 @@ jobs:
             exit 1
           fi
 
+      - name: Run the app busy for four minutes and look for leaks
+        id: leaks
+        continue-on-error: true
+        shell: bash
+        run: |
+          # Turn on everything that runs repeatedly: every item, live numbers each second,
+          # a command every 5 seconds, a frosted background, and live text in the menu bar.
+          python3 - > layout.json <<'PY'
+          import json, uuid
+          def entry(kind, **extra):
+              e = {"id": str(uuid.uuid4()).upper(), "kind": kind, "enabled": True, "text": "", "interval": 60}
+              e.update(extra)
+              return e
+          top = ["computerName", "hostName", "model", "modelIdentifier", "serialNumber", "hardwareUUID", "chip",
+                 "memory", "graphics", "os", "server", "user", "uptime", "bootTime", "cpuUsage", "memoryUsage",
+                 "battery", "batteryHealth", "disks", "interfaces", "networkSpeed"]
+          details = ["wifiName", "ipv4", "subnetMask", "router", "configMethod", "ipv6", "macAddress", "dns",
+                     "searchDomains", "wifiSignal"]
+          entries = [entry("heading", text="Test {time}")] + [entry("item", item=i) for i in top]
+          entries += [entry("spacer"),
+                      entry("text", label="Live", text="{cpu} · {memory-used} · down {down} up {up}"),
+                      entry("command", label="Cmd", text="date +%s; echo second line", interval=5)]
+          print(json.dumps({"entries": entries, "interfaceDetails": [entry("item", item=d) for d in details]}))
+          PY
+          domain=com.mmzeller.Nameplate
+          defaults write $domain Layout -string "$(cat layout.json)"
+          defaults write $domain LiveInterval -float 1
+          defaults write $domain Background -string blur
+          defaults write $domain MenuBarText -string custom
+          defaults write $domain MenuBarTemplate -string "{cpu} down {down}"
+          defaults delete $domain HasLaunchedBefore 2>/dev/null || true
+
+          build/Nameplate.app/Contents/MacOS/Nameplate > app.log 2>&1 &
+          pid=$!
+          sleep 45
+          early=0; sudo leaks "$pid" > leaks-early.txt 2>&1 || early=$?
+          : > rss.txt
+          for i in $(seq 1 12); do
+            sleep 15
+            echo "$((45 + i * 15)) s: $(ps -o rss= -p "$pid" | tr -d ' ') KB" >> rss.txt
+          done
+          late=0; sudo leaks "$pid" > leaks-late.txt 2>&1 || late=$?
+          running=no; kill -0 "$pid" 2>/dev/null && running=yes
+          kill "$pid" 2>/dev/null || true
+          {
+            echo "still running after 4 minutes: $running"
+            echo "== after 45 seconds (leaks exit $early)"
+            grep -E "Physical footprint|leaks for|Process [0-9]+:" leaks-early.txt || head -20 leaks-early.txt
+            echo "== after 4 minutes (leaks exit $late)"
+            grep -E "Physical footprint|leaks for|Process [0-9]+:" leaks-late.txt || head -20 leaks-late.txt
+            echo "== resident memory every 15 seconds"
+            cat rss.txt
+            echo "== details of anything leaked (after 4 minutes)"
+            sed -n '/leaks for/,$p' leaks-late.txt | head -200
+          } > leaks.log
+          cat leaks.log
+          [ "$running" = yes ] && [ "$late" = 0 ]
+
       - name: Package the app
         shell: bash
         run: |
@@ -92,7 +157,7 @@ jobs:
           test -f Nameplate.dmg
           shasum -a 256 Nameplate.zip Nameplate.dmg
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: Nameplate
           path: |
@@ -113,8 +178,8 @@ jobs:
           fi
 
       - name: Publish a release for a new version
-        if: github.ref == 'refs/heads/main' && steps.version.outputs.released == 'false' && steps.launch.outcome == 'success'
-        uses: softprops/action-gh-release@v3
+        if: github.ref == 'refs/heads/main' && steps.version.outputs.released == 'false' && steps.launch.outcome == 'success' && steps.test.outcome == 'success'
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: Nameplate ${{ steps.version.outputs.version }}
@@ -128,7 +193,7 @@ jobs:
 
       - name: Attach to a release tagged by hand
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           body_path: .github/release-notes.md
           files: |
@@ -149,10 +214,12 @@ jobs:
             echo "commit: $GITHUB_SHA"
             echo "job: ${{ job.status }}"
             echo "build: ${{ steps.build.outcome }}"
+            echo "test: ${{ steps.test.outcome }}"
             echo "check: ${{ steps.check.outcome }}"
             echo "launch: ${{ steps.launch.outcome }}"
+            echo "leaks: ${{ steps.leaks.outcome }}"
           } > status.txt
-          for f in build.log check.log launch.log; do
+          for f in build.log test.log check.log launch.log leaks.log app.log; do
             if [ -f "$GITHUB_WORKSPACE/$f" ]; then cp "$GITHUB_WORKSPACE/$f" .; fi
           done
           if [ -f build.log ]; then grep -E 'error:|warning:' build.log | sort -u > problems.txt || true; fi

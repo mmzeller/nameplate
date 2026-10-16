@@ -8,6 +8,7 @@ final class StatusController: NSObject, NSPopoverDelegate {
     private var item: NSStatusItem?
     private let popover = NSPopover()
     private let store: InfoStore
+    private var symbolCache: (name: String, image: NSImage)?
 
     init(store: InfoStore) {
         self.store = store
@@ -67,12 +68,17 @@ final class StatusController: NSObject, NSPopoverDelegate {
         var image: NSImage?
         if showSymbol {
             let name = Prefs.string(PrefKey.menuBarSymbol)
-            image = NSImage(systemSymbolName: name.isEmpty ? "info.circle" : name, accessibilityDescription: "Nameplate")
-                ?? NSImage(systemSymbolName: "info.circle", accessibilityDescription: "Nameplate")
-            image = image?.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 14, weight: .regular))
-            image?.isTemplate = true
+            if let cached = symbolCache, cached.name == name {
+                image = cached.image
+            } else {
+                image = NSImage(systemSymbolName: name.isEmpty ? "info.circle" : name, accessibilityDescription: "Nameplate")
+                    ?? NSImage(systemSymbolName: "info.circle", accessibilityDescription: "Nameplate")
+                image = image?.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 14, weight: .regular))
+                image?.isTemplate = true
+                symbolCache = image.map { (name: name, image: $0) }
+            }
         }
-        button.image = image
+        if button.image !== image { button.image = image }
         button.imagePosition = .imageLeading
 
         let shown = (showSymbol && !title.isEmpty) ? " " + title : title
