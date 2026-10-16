@@ -1,0 +1,78 @@
+Building for debugging...
+[0/17] /Users/runner/work/nameplate/nameplate/.build/arm64-apple-macosx/debug/NameplatePackageTests.derived/runner.swift
+[1/17] Write sources
+[6/17] Write NameplateCLI-entitlement.plist
+[7/17] Write Nameplate-entitlement.plist
+[8/17] Write swift-version--79AA4F9932D1E87A.txt
+[10/24] Compiling NameplateCore LiveSampler.swift
+[11/24] Compiling NameplateCore LowLevel.swift
+[12/24] Compiling NameplateCore Models.swift
+[13/24] Emitting module NameplateCore
+[14/24] Compiling NameplateCore CommandRunner.swift
+[15/24] Compiling NameplateCore Formatting.swift
+[16/24] Compiling NameplateCore Layout.swift
+[17/27] Compiling NameplateCore NetworkCollector.swift
+[18/27] Compiling NameplateCore PublicIP.swift
+[19/27] Compiling NameplateCore SystemCollector.swift
+[20/40] Emitting module NameplateCLI
+[21/40] Compiling NameplateCLI main.swift
+[21/40] Write Objects.LinkFileList
+[22/40] Linking NameplateCLI
+[23/40] Applying NameplateCLI
+[25/40] Emitting module Nameplate
+[26/44] Compiling Nameplate InfoPanelView.swift
+[27/44] Compiling Nameplate InfoStore.swift
+[28/44] Compiling Nameplate Looks.swift
+[29/44] Compiling Nameplate NameplateApp.swift
+[30/44] Compiling Nameplate AppDelegate.swift
+[31/44] Compiling Nameplate ChangeMonitor.swift
+[32/44] Compiling Nameplate DesktopController.swift
+[33/44] Compiling Nameplate HotKeys.swift
+[34/44] Compiling Nameplate Prefs.swift
+[35/44] Compiling Nameplate SettingsView.swift
+[36/44] Compiling Nameplate StatusController.swift
+[37/44] Compiling Nameplate Support.swift
+[37/44] Write Objects.LinkFileList
+[38/44] Linking Nameplate
+[39/44] Applying Nameplate
+[41/44] Emitting module NameplateCoreTests
+[42/44] Compiling NameplateCoreTests LeakTests.swift
+[43/46] Emitting module NameplatePackageTests
+[44/46] Compiling NameplatePackageTests runner.swift
+[44/46] Write Objects.LinkFileList
+[45/46] Linking NameplatePackageTests
+Build complete! (23.09s)
+Test Suite 'All tests' started at 2026-10-16 12:23:29.571.
+Test Suite 'NameplatePackageTests.xctest' started at 2026-10-16 12:23:29.573.
+Test Suite 'LeakTests' started at 2026-10-16 12:23:29.573.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerClosesFileHandles]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerClosesFileHandles]' passed (43.274 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerDoesNotWaitForBackgroundPrograms]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerDoesNotWaitForBackgroundPrograms]' passed (0.111 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerKeepsBigOutputBounded]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerKeepsBigOutputBounded]' passed (0.518 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerTimesOut]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerTimesOut]' passed (1.243 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testDamagedLayoutIsIgnoredSafely]' started.
+Test Case '-[NameplateCoreTests.LeakTests testDamagedLayoutIsIgnoredSafely]' passed (0.005 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testFullHardwareReadDoesNotLeak]' started.
+Test Case '-[NameplateCoreTests.LeakTests testFullHardwareReadDoesNotLeak]' passed (1.090 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testPlaceholdersAreJustText]' started.
+Test Case '-[NameplateCoreTests.LeakTests testPlaceholdersAreJustText]' passed (0.000 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testRepeatedSamplingDoesNotLeak]' started.
+Test Case '-[NameplateCoreTests.LeakTests testRepeatedSamplingDoesNotLeak]' passed (2.661 seconds).
+Test Suite 'LeakTests' passed at 2026-10-16 12:24:18.476.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 48.902 (48.903) seconds
+Test Suite 'NameplatePackageTests.xctest' passed at 2026-10-16 12:24:18.476.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 48.902 (48.903) seconds
+Test Suite 'All tests' passed at 2026-10-16 12:24:18.476.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 48.902 (48.905) seconds
+RESULT commands: 300 runs, open files 8 -> 8
+RESULT background program: returned after 0.1 s
+RESULT timeout: stopped after 1.2 s, said "Timed out after 1 seconds"
+RESULT full read: 150 complete reads (hardware, graphics, disks, network); memory 26.6 MB -> 26.6 MB, Mach ports 72 -> 72
+RESULT sampling: 3000 live samples, 300 full refreshes, 3000 redraws; memory 26.6 MB -> 26.6 MB, Mach ports 73 -> 73, open files 8 -> 8
+◇ Test run started.
+↳ Testing Library Version: 124.4
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests passed after 0.001 seconds.

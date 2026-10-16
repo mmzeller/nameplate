@@ -1,0 +1,139 @@
+==> Compiling Nameplate 1.1.2 (first build takes a minute or two)
+0%: Compute target dependency graph
+Building targets in dependency order
+Target dependency graph (4 targets)
+0%: Gather provisioning inputs
+0%: Create build description
+0%: Discovering version info for swiftc
+0%: Discovering version info for clang
+0%: Discovering version info for ld
+Build description signature: ce3da0872df331cfd2f48a2bd9ed1434
+
+Build description path: /Users/runner/work/nameplate/nameplate/.build/apple/Intermediates.noindex/XCBuildData/ce3da0872df331cfd2f48a2bd9ed1434.xcbuilddata
+
+0%: Create build directory $(TARGET_BUILD_DIR)
+0%: Build stat cache for /Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk
+0%: Create build directory $(OBJROOT)
+0%: Create build directory $(TARGET_BUILD_DIR)/Release
+0%: Create build directory $(OBJROOT)/EagerLinkingTBDs/Release
+0%: Create build directory $(TARGET_BUILD_DIR)/Release/PackageFrameworks
+0%: Write Nameplate_const_extract_protocols.json (x86_64)
+0%: Write Nameplate.SwiftFileList (x86_64)
+0%: Write Nameplate.LinkFileList (x86_64)
+0%: Write Nameplate-OutputFileMap.json (x86_64)
+0%: Write Nameplate_const_extract_protocols.json (arm64)
+0%: Write Nameplate.SwiftFileList (arm64)
+0%: Write Nameplate.LinkFileList (arm64)
+0%: Write Nameplate-OutputFileMap.json (arm64)
+0%: Write Nameplate.DependencyStaticMetadataFileList
+0%: Write Nameplate.DependencyMetadataFileList
+0%: Write NameplateCore_Module_const_extract_protocols.json (x86_64)
+0%: Write NameplateCore_Module.SwiftFileList (x86_64)
+0%: Write NameplateCore_Module.SwiftConstValuesFileList
+0%: Write NameplateCore_Module.LinkFileList (x86_64)
+0%: Write NameplateCore_Module-OutputFileMap.json (x86_64)
+0%: Write NameplateCore_Module_const_extract_protocols.json (arm64)
+0%: Write NameplateCore_Module.SwiftFileList (arm64)
+0%: Write NameplateCore_Module.SwiftConstValuesFileList
+0%: Write NameplateCore_Module.LinkFileList (arm64)
+0%: Write NameplateCore_Module-OutputFileMap.json (arm64)
+0%: Write NameplateCore_Module.DependencyStaticMetadataFileList
+0%: Write NameplateCore_Module.DependencyMetadataFileList
+0%: Write NameplateCore.modulemap
+0%: Write NameplateCLI_const_extract_protocols.json (x86_64)
+0%: Write NameplateCLI.SwiftFileList (x86_64)
+0%: Copy NameplateCore.modulemap
+0%: Write NameplateCLI.LinkFileList (x86_64)
+0%: Write NameplateCLI-OutputFileMap.json (x86_64)
+0%: Write NameplateCLI_const_extract_protocols.json (arm64)
+0%: Write NameplateCLI.SwiftFileList (arm64)
+0%: Write NameplateCLI.LinkFileList (arm64)
+0%: Write NameplateCLI-OutputFileMap.json (arm64)
+0%: Write NameplateCLI.DependencyStaticMetadataFileList
+0%: Write NameplateCLI.DependencyMetadataFileList
+43%: Planning Swift module NameplateCore (x86_64)
+43%: Planning Swift module NameplateCore (arm64)
+44%: Compiling CommandRunner.swift, Formatting.swift, Layout.swift, LiveSampler.swift, LowLevel.swift, Models.swift, NetworkCollector.swift, PublicIP.swift, SystemCollector.swift
+44%: Compile NameplateCore_Module (x86_64)
+44%: Compile NameplateCore_Module (arm64)
+44%: Compiling CommandRunner.swift, Formatting.swift, Layout.swift, LiveSampler.swift, LowLevel.swift, Models.swift, NetworkCollector.swift, PublicIP.swift, SystemCollector.swift
+44%: Compile 9 Swift source files (arm64)
+44%: Compile 9 Swift source files (x86_64)
+47%: Discovering Swift tasks after 'Compiling CommandRunner.swift, Formatting.swift, Layout.swift, LiveSampler.swift, LowLevel.swift, Models.swift, NetworkCollector.swift, PublicIP.swift, SystemCollector.swift'
+47%: Unblock downstream dependents of NameplateCore_Module (arm64)
+47%: Copy NameplateCore.swiftmodule (arm64)
+47%: Copy NameplateCore.swiftdoc (arm64)
+47%: Copy NameplateCore.abi.json (arm64)
+47%: Copy NameplateCore.swiftsourceinfo (arm64)
+53%: Discovering Swift tasks after 'Compiling CommandRunner.swift, Formatting.swift, Layout.swift, LiveSampler.swift, LowLevel.swift, Models.swift, NetworkCollector.swift, PublicIP.swift, SystemCollector.swift'
+53%: Unblock downstream dependents of NameplateCore_Module (x86_64)
+53%: Copy NameplateCore.swiftmodule (x86_64)
+53%: Copy NameplateCore.swiftdoc (x86_64)
+53%: Merge Objective-C generated interface headers
+53%: Copy NameplateCore.abi.json (x86_64)
+53%: Copy NameplateCore.swiftsourceinfo (x86_64)
+53%: Link NameplateCore_Module.o (x86_64)
+53%: Link NameplateCore_Module.o (arm64)
+53%: Planning Swift module Nameplate (x86_64)
+53%: Planning Swift module Nameplate (arm64)
+53%: Compiling AppDelegate.swift, ChangeMonitor.swift, DesktopController.swift, HotKeys.swift, InfoPanelView.swift, InfoStore.swift, Looks.swift, NameplateApp.swift, Prefs.swift, SettingsView.swift, StatusController.swift, Support.swift
+53%: Compiling AppDelegate.swift, ChangeMonitor.swift, DesktopController.swift, HotKeys.swift, InfoPanelView.swift, InfoStore.swift, Looks.swift, NameplateApp.swift, Prefs.swift, SettingsView.swift, StatusController.swift, Support.swift
+60%: Planning Swift module NameplateCLI (x86_64)
+60%: Compile 12 Swift source files (x86_64)
+60%: Create universal binary NameplateCore_Module.o
+60%: Compiling main.swift
+60%: Compile 12 Swift source files (arm64)
+60%: Compile main.swift (x86_64)
+60%: Planning Swift module NameplateCLI (arm64)
+64%: Discovering Swift tasks after 'Compiling main.swift'
+64%: Unblock downstream dependents of NameplateCLI (x86_64)
+64%: Compiling main.swift
+64%: Compile main.swift (arm64)
+64%: Copy NameplateCLI.swiftmodule (x86_64)
+66%: Discovering Swift tasks after 'Compiling main.swift'
+66%: Unblock downstream dependents of NameplateCLI (arm64)
+66%: Copy NameplateCLI.swiftdoc (x86_64)
+66%: Copy NameplateCLI.abi.json (x86_64)
+66%: Copy NameplateCLI.swiftmodule (arm64)
+66%: Copy NameplateCLI.swiftdoc (arm64)
+66%: Copy NameplateCLI.abi.json (arm64)
+66%: Copy NameplateCLI.swiftsourceinfo (x86_64)
+66%: Copy NameplateCLI.swiftsourceinfo (arm64)
+66%: Compile Nameplate (x86_64)
+66%: Compile Nameplate (arm64)
+66%: Compile NameplateCLI (x86_64)
+66%: Compile NameplateCLI (arm64)
+66%: Extract app intents metadata
+2026-10-16 12:22:52.675 appintentsmetadataprocessor[2275:10618] Starting appintentsmetadataprocessor export
+2026-10-16 12:22:52.770 appintentsmetadataprocessor[2275:10618] Extracted no relevant App Intents symbols, skipping writing output
+
+79%: Register execution policy exception for NameplateCore_Module.o
+79%: Link NameplateCLI (x86_64)
+79%: Link NameplateCLI (arm64)
+82%: Create universal binary NameplateCLI
+82%: Generate NameplateCLI.dSYM for NameplateCLI
+84%: Register execution policy exception for NameplateCLI
+85%: Discovering Swift tasks after 'Compiling AppDelegate.swift, ChangeMonitor.swift, DesktopController.swift, HotKeys.swift, InfoPanelView.swift, InfoStore.swift, Looks.swift, NameplateApp.swift, Prefs.swift, SettingsView.swift, StatusController.swift, Support.swift'
+85%: Unblock downstream dependents of Nameplate (arm64)
+85%: Copy Nameplate.swiftmodule (arm64)
+85%: Link Nameplate (arm64)
+85%: Copy Nameplate.swiftdoc (arm64)
+85%: Copy Nameplate.abi.json (arm64)
+85%: Copy Nameplate.swiftsourceinfo (arm64)
+85%: Discovering Swift tasks after 'Compiling AppDelegate.swift, ChangeMonitor.swift, DesktopController.swift, HotKeys.swift, InfoPanelView.swift, InfoStore.swift, Looks.swift, NameplateApp.swift, Prefs.swift, SettingsView.swift, StatusController.swift, Support.swift'
+85%: Unblock downstream dependents of Nameplate (x86_64)
+85%: Link Nameplate (x86_64)
+85%: Copy Nameplate.swiftmodule (x86_64)
+85%: Copy Nameplate.swiftdoc (x86_64)
+85%: Copy Nameplate.abi.json (x86_64)
+85%: Copy Nameplate.swiftsourceinfo (x86_64)
+96%: Create universal binary Nameplate
+96%: Generate Nameplate.dSYM for Nameplate
+99%: Register execution policy exception for Nameplate
+100%: Build succeeded
+Build complete!
+==> Assembling build/Nameplate.app
+==> Signing (ad hoc, so macOS will run it on this Mac)
+build/Nameplate.app/Contents/Helpers/nameplate: replacing existing signature
+build/Nameplate.app: replacing existing signature
+==> Built build/Nameplate.app

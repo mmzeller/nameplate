@@ -1,0 +1,27 @@
+still running after 4 minutes: yes
+== after 45 seconds (leaks exit 0)
+Physical footprint:         40.3M
+Physical footprint (peak):  42.2M
+Process 4166: 129699 nodes malloced for 17604 KB
+Process 4166: 0 leaks for 0 total leaked bytes.
+== after 4 minutes (leaks exit 0)
+Physical footprint:         40.5M
+Physical footprint (peak):  42.5M
+Process 4166: 131789 nodes malloced for 17748 KB
+Process 4166: 0 leaks for 0 total leaked bytes.
+== resident memory every 15 seconds
+60 s: 91392 KB
+75 s: 91424 KB
+90 s: 90560 KB
+105 s: 90672 KB
+120 s: 90880 KB
+135 s: 90912 KB
+150 s: 90896 KB
+165 s: 90944 KB
+180 s: 87728 KB
+195 s: 87568 KB
+210 s: 86400 KB
+225 s: 86192 KB
+== details of anything leaked (after 4 minutes)
+Process 4166: 0 leaks for 0 total leaked bytes.
+

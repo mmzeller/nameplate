@@ -1,0 +1,79 @@
+Architectures in the fat file: build/Nameplate.app/Contents/MacOS/Nameplate are: x86_64 arm64 
+nameplate 1.1.2
+HARDWARE
+Computer       iad20-eo1212-3e95fd65-8f1c-4baf-b784-b38d3659649b-E63B75314B46
+Host Name      iad20-eo1212-3e95fd65-8f1c-4baf-b784-b38d3659649b-E63B75314B46.local
+Model          Apple Virtual Machine 1
+Model ID       VirtualMac2,1
+Serial         Z4GXPTD5F3
+Hardware UUID  943768CA-CD2C-54E5-85BF-0A99977A25A6
+Chip           Apple M1 (Virtual) (3-core)
+Memory         7 GB
+Graphics       Apple Paravirtual device
+
+STATUS
+macOS          macOS Sequoia 15.7.9 (24G830)
+User           Anka (runner)
+Uptime         4 minutes
+Booted         Oct 16, 2026 at 12:19 PM
+CPU            37%
+Memory Used    3.3 GB of 7 GB (47%)
+Disk           Macintosh HD: 46.44 GB free of 343.07 GB
+
+NETWORK
+Ethernet (en0)
+  IPv4         192.168.64.2
+  Subnet       255.255.255.0 (/24)
+  Router       192.168.64.1
+  Config       DHCP from 192.168.64.1
+  MAC          e6:3b:75:31:4b:46
+  DNS          192.168.64.1
+Traffic        ↓ 0 bytes/s   ↑ 0 bytes/s
+computer-name      iad20-eo1212-3e95fd65-8f1c-4baf-b784-b38d3659649b-E63B75314B46
+local-hostname     iad20-eo1212-3e95fd65-8f1c-4baf-b784-b38d3659649b-E63B75314B46.local
+hostname           iad20-eo1212-3e95fd65-8f1c-4baf-b784-b38d3659649b-E63B75314B46.local
+model              Apple Virtual Machine 1
+model-id           VirtualMac2,1
+serial             Z4GXPTD5F3
+uuid               943768CA-CD2C-54E5-85BF-0A99977A25A6
+chip               Apple M1 (Virtual)
+cores              3
+memory             7 GB
+memory-bytes       7516192768
+gpu                Apple Paravirtual device
+os                 macOS Sequoia 15.7.9 (24G830)
+os-version         15.7.9
+os-build           24G830
+user               runner
+user-full-name     Anka
+uptime             4 minutes
+uptime-short       4m
+uptime-seconds     280
+boot-time          Oct 16, 2026 at 12:19 PM
+cpu                24%
+memory-used        3.3 GB
+memory-percent     47%
+memory-pressure    Normal
+down               0 bytes/s
+up                 2 KB/s
+disk               Macintosh HD: 46.44 GB free of 343.07 GB
+disk-free          46.44 GB
+disk-free-bytes    46442273600
+disk-total         343.07 GB
+disk-used-percent  86
+interface          en0
+service            Ethernet
+ip                 192.168.64.2
+subnet             255.255.255.0
+router             192.168.64.1
+config             DHCP from 192.168.64.1
+mac                e6:3b:75:31:4b:46
+dns                192.168.64.1
+en0.ip             192.168.64.2
+en0.router         192.168.64.1
+en0.mac            e6:3b:75:31:4b:46
+date               Oct 16, 2026
+time               12:24 PM
+day                Friday
+Apple Virtual Machine 1
+16%
