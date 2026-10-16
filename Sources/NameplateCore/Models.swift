@@ -1,7 +1,7 @@
 import Foundation
 
 public enum NameplateInfo {
-    public static let version = "1.0"
+    public static let version = "1.1"
     public static let bundleIdentifier = "com.mmzeller.Nameplate"
 }
 
@@ -130,6 +130,38 @@ public struct WiFiInfo: Codable, Equatable, Sendable {
     public var channel: Int?
     public var band: String?
     public var transmitRateMbps: Double?
+
+    public init() {}
+}
+
+// MARK: - Live numbers
+
+public enum MemoryPressure: String, Codable, Sendable {
+    case normal, warning, critical
+    public var title: String { rawValue.capitalized }
+}
+
+public struct BatteryInfo: Codable, Equatable, Sendable {
+    public var percent: Int
+    public var isCharging: Bool
+    public var isOnPower: Bool
+    public var isCharged: Bool
+    public var minutesToEmpty: Int?
+    public var minutesToFull: Int?
+    public var cycleCount: Int?
+    public var healthPercent: Int?
+}
+
+/// Numbers that change from second to second. Sampled separately from `SystemSnapshot`.
+public struct LiveStats: Codable, Equatable, Sendable {
+    /// 0...1 across all cores.
+    public var cpuUsage: Double?
+    public var memoryUsed: UInt64?
+    public var memoryTotal: UInt64?
+    public var memoryPressure: MemoryPressure?
+    public var battery: BatteryInfo?
+    public var downBytesPerSecond: Double?
+    public var upBytesPerSecond: Double?
 
     public init() {}
 }

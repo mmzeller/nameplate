@@ -92,8 +92,8 @@ struct InfoPanelView: View {
     private func lineView(_ line: InfoLine) -> some View {
         switch line.kind {
         case .section:
-            Text(line.value.uppercased())
-                .font(.caption.weight(.semibold))
+            Text(line.value)
+                .font(.callout.weight(.bold))
                 .foregroundStyle(.secondary)
                 .padding(.top, line.id == 0 ? 0 : 8)
         case .subheader:
@@ -104,15 +104,22 @@ struct InfoPanelView: View {
             Color.clear.frame(height: 6)
         case .row:
             GridRow {
-                Text(line.label)
+                Text(line.label.trimmingCharacters(in: .whitespaces))
                     .foregroundStyle(.secondary)
                     .gridColumnAlignment(.trailing)
-                Text(line.value)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .center, spacing: 8) {
+                    Text(line.value)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if showBars, let fraction = line.fraction {
+                        UsageBar(fraction: fraction, warn: line.warn)
+                    }
+                }
             }
         }
     }
+
+    private var showBars: Bool { Prefs.bool(PrefKey.showBars) }
 
     private func estimatedHeight(_ lines: [InfoLine]) -> CGFloat {
         var height: CGFloat = 24
@@ -134,5 +141,24 @@ struct InfoPanelView: View {
         if model.contains("Mac Studio") { return "macstudio" }
         if model.contains("Mac Pro") { return "macpro.gen3" }
         return "desktopcomputer"
+    }
+}
+
+/// A small rounded bar for disk, CPU, memory and battery.
+private struct UsageBar: View {
+    let fraction: Double
+    let warn: Bool
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Capsule().fill(Color.primary.opacity(0.12))
+            GeometryReader { proxy in
+                Capsule()
+                    .fill(warn ? Color.orange : Color.accentColor)
+                    .frame(width: max(proxy.size.height, proxy.size.width * min(max(fraction, 0), 1)))
+            }
+        }
+        .frame(width: 56, height: 6)
+        .accessibilityLabel("\(Int((fraction * 100).rounded())) percent")
     }
 }

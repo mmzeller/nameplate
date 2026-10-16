@@ -16,13 +16,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: Launch
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        Prefs.registerDefaults()
         buildMainMenu()
 
         status = StatusController(store: store)
         settings = SettingsWindowController(location: location)
 
         store.onUpdate = { [weak self] in self?.render() }
+        desktop.onMoveFinished = { position, marginX, marginY in
+            Prefs.defaults.set(position.rawValue, forKey: PrefKey.desktopPosition)
+            Prefs.defaults.set(Double(marginX), forKey: PrefKey.marginX)
+            Prefs.defaults.set(Double(marginY), forKey: PrefKey.marginY)
+        }
         monitor.onChange = { [weak self] reason in self?.systemChanged(reason) }
         location.onChange = { [weak self] in self?.scheduleRefresh() }
         monitor.start()
@@ -98,6 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func refreshNow() {
         store.refresh()
+        store.rerunCommands()
     }
 
     // MARK: Preferences
@@ -108,8 +113,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func applyPreferences() {
-        let options = Prefs.displayOptions()
-        store.setOptions(options)
+        let layout = Prefs.layout()
+        let menuTemplate = Prefs.menuBarText == .custom ? Prefs.string(PrefKey.menuBarTemplate) : ""
+        var liveNeeds = layout.liveNeeds
+        liveNeeds.formUnion(InfoFormatter.liveNeeds(forTemplate: menuTemplate))
+        let menuKeys = InfoFormatter.keys(in: menuTemplate)
+        let wantsPublicIP = layout.uses(.publicIP) || layout.usesKey("public-ip") || menuKeys.contains("public-ip")
+        store.configure(layout: layout, settings: Prefs.renderSettings(), liveNeeds: liveNeeds,
+                        liveInterval: Prefs.double(PrefKey.liveInterval), wantsPublicIP: wantsPublicIP)
 
         let showDock = Prefs.showDockIcon
         if showDock != lastDockSetting {
@@ -122,14 +133,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         status.apply()
 
-        HotKeyCenter.shared.set(id: 1, to: HotKeyChoice(rawValue: Prefs.string(PrefKey.copyHotKey)) ?? .off) { [weak self] in
+        HotKeyCenter.shared.set(id: 1, to: Prefs.hotKey(PrefKey.copyHotKey)) { [weak self] in
             self?.copyAll(feedback: true)
         }
-        HotKeyCenter.shared.set(id: 2, to: HotKeyChoice(rawValue: Prefs.string(PrefKey.panelHotKey)) ?? .off) { [weak self] in
+        HotKeyCenter.shared.set(id: 2, to: Prefs.hotKey(PrefKey.panelHotKey)) { [weak self] in
             self?.status.showPanelAnywhere()
         }
+        HotKeyCenter.shared.set(id: 3, to: Prefs.hotKey(PrefKey.toggleDesktopHotKey)) { [weak self] in
+            self?.toggleDesktopAction(nil)
+        }
+        HotKeyCenter.shared.set(id: 4, to: Prefs.hotKey(PrefKey.copyIPHotKey)) { [weak self] in
+            self?.copyIP(feedback: true)
+        }
 
-        if options.has(.interfaces) && options.has(.wifiName) {
+        if layout.usesDetail(.wifiName) || layout.usesKey("ssid") || menuKeys.contains("ssid") {
             location.requestIfNeeded()
         }
 
@@ -139,11 +156,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: Actions
 
     func copyAll(feedback: Bool) {
-        var options = DisplayOptions.everything
-        if store.snapshot.publicIP == nil { options.enabled.remove(.publicIP) }
-        let lines = InfoFormatter.lines(for: store.snapshot, options: options)
+        var layout = Layout.everything
+        let input = store.input
+        layout.entries.removeAll { entry in
+            (entry.item == .publicIP && input.snapshot.publicIP == nil)
+                || (entry.item == .cpuUsage && input.live.cpuUsage == nil)
+                || (entry.item == .networkSpeed && input.live.downBytesPerSecond == nil)
+        }
+        let lines = InfoFormatter.lines(layout: layout, input: input, settings: .everything)
         copy(InfoFormatter.plainText(lines))
         if feedback { NSSound(named: "Tink")?.play() }
+    }
+
+    func copyIP(feedback: Bool) {
+        let primary = store.snapshot.network.primary
+        guard let address = primary?.ipv4.first?.address
+                ?? primary?.ipv6.first(where: { !$0.isLinkLocal })?.address else {
+            NSSound.beep()
+            return
+        }
+        copy(address)
+        if feedback { NSSound(named: "Tink")?.play() }
+    }
+
+    func beginMoveDesktop() {
+        if !Prefs.showOnDesktop {
+            Prefs.defaults.set(true, forKey: PrefKey.showOnDesktop)
+            render()
+        }
+        desktop.beginMove()
     }
 
     func copyJSON() {
@@ -168,6 +209,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleDesktopAction(_ sender: Any?) {
         Prefs.defaults.set(!Prefs.showOnDesktop, forKey: PrefKey.showOnDesktop)
     }
+    @objc func copyIPAction(_ sender: Any?) { copyIP(feedback: false) }
+    @objc func moveDesktopAction(_ sender: Any?) { beginMoveDesktop() }
     @objc func refreshAction(_ sender: Any?) { refreshNow() }
     @objc func installToolAction(_ sender: Any?) { CommandLineTool.install() }
     @objc func settingsAction(_ sender: Any?) { showSettings() }

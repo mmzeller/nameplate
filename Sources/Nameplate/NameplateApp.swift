@@ -5,6 +5,7 @@ enum NameplateApp {
     @MainActor
     static func main() {
         Prefs.registerDefaults()
+        Prefs.migrate()
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate

@@ -49,12 +49,23 @@ final class StatusController: NSObject, NSPopoverDelegate {
 
     func updateButton() {
         guard let button = item?.button else { return }
-        let style = Prefs.menuBarStyle
         let snapshot = store.snapshot
         let ip = snapshot.network.primary?.ipv4.first?.address ?? "No network"
 
+        var title: String
+        switch Prefs.menuBarText {
+        case .off: title = ""
+        case .ip: title = ip
+        case .name: title = snapshot.computerName
+        case .custom: title = InfoFormatter.render(template: Prefs.string(PrefKey.menuBarTemplate), values: store.templateValues)
+        }
+        title = title.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+        if title.count > 80 { title = String(title.prefix(79)) + "…" }
+
+        // Always show something, so Nameplate can't disappear from the menu bar.
+        let showSymbol = Prefs.bool(PrefKey.menuBarShowSymbol) || title.isEmpty
         var image: NSImage?
-        if style == .icon || style == .iconAndIP {
+        if showSymbol {
             let name = Prefs.string(PrefKey.menuBarSymbol)
             image = NSImage(systemSymbolName: name.isEmpty ? "info.circle" : name, accessibilityDescription: "Nameplate")
                 ?? NSImage(systemSymbolName: "info.circle", accessibilityDescription: "Nameplate")
@@ -64,17 +75,9 @@ final class StatusController: NSObject, NSPopoverDelegate {
         button.image = image
         button.imagePosition = .imageLeading
 
-        let title: String
-        switch style {
-        case .icon: title = ""
-        case .iconAndIP: title = " " + ip
-        case .ip: title = ip
-        case .name: title = snapshot.computerName
-        }
-        if title.isEmpty {
-            button.title = ""
-        } else {
-            button.attributedTitle = NSAttributedString(string: title, attributes: [
+        let shown = (showSymbol && !title.isEmpty) ? " " + title : title
+        if button.attributedTitle.string != shown {
+            button.attributedTitle = NSAttributedString(string: shown, attributes: [
                 .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
             ])
         }
@@ -132,10 +135,11 @@ final class StatusController: NSObject, NSPopoverDelegate {
 
         menu.addItem(withTitle: "Copy All Information", action: #selector(AppDelegate.copyAllAction(_:)), keyEquivalent: "c").target = app
         menu.addItem(withTitle: "Copy as JSON", action: #selector(AppDelegate.copyJSONAction(_:)), keyEquivalent: "").target = app
+        menu.addItem(withTitle: "Copy IP Address", action: #selector(AppDelegate.copyIPAction(_:)), keyEquivalent: "").target = app
 
         let copyItem = NSMenuItem(title: "Copy", action: nil, keyEquivalent: "")
         let copyMenu = NSMenu()
-        for value in InfoFormatter.values(for: snapshot) where !value.key.contains(".") {
+        for value in InfoFormatter.values(for: store.input) where !value.key.contains(".") {
             let shown = value.value.count > 48 ? String(value.value.prefix(47)) + "…" : value.value
             let entry = NSMenuItem(title: "\(value.label): \(shown)", action: #selector(AppDelegate.copyValueAction(_:)), keyEquivalent: "")
             entry.representedObject = value.value
@@ -150,6 +154,10 @@ final class StatusController: NSObject, NSPopoverDelegate {
         desktop.state = Prefs.showOnDesktop ? .on : .off
         desktop.target = app
         menu.addItem(desktop)
+        let move = NSMenuItem(title: "Move Desktop Info…", action: #selector(AppDelegate.moveDesktopAction(_:)), keyEquivalent: "")
+        move.target = app
+        if !Prefs.showOnDesktop { move.action = nil }
+        menu.addItem(move)
         menu.addItem(withTitle: "Refresh", action: #selector(AppDelegate.refreshAction(_:)), keyEquivalent: "r").target = app
         menu.addItem(.separator())
 

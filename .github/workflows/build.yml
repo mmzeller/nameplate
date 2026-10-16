@@ -25,6 +25,7 @@ jobs:
           xcrun swiftc --version
 
       - name: Build for Apple silicon and Intel
+        id: build
         shell: bash
         run: |
           set -o pipefail
@@ -42,12 +43,39 @@ jobs:
             echo "::error file=${file#"$GITHUB_WORKSPACE/"},line=$row,col=$col::$msg"
           done
 
-      - name: Check the app
+      - name: Check the command-line tool
+        id: check
+        shell: bash
         run: |
-          lipo -info build/Nameplate.app/Contents/MacOS/Nameplate
-          build/Nameplate.app/Contents/Helpers/nameplate --version
-          build/Nameplate.app/Contents/Helpers/nameplate
-          build/Nameplate.app/Contents/Helpers/nameplate --json > /dev/null
+          set -o pipefail
+          {
+            lipo -info build/Nameplate.app/Contents/MacOS/Nameplate
+            build/Nameplate.app/Contents/Helpers/nameplate --version
+            build/Nameplate.app/Contents/Helpers/nameplate --live
+            build/Nameplate.app/Contents/Helpers/nameplate --keys
+            build/Nameplate.app/Contents/Helpers/nameplate --json > /dev/null
+            build/Nameplate.app/Contents/Helpers/nameplate --get model --get cpu
+          } 2>&1 | tee check.log
+
+      - name: Start the app and make sure it keeps running
+        id: launch
+        shell: bash
+        run: |
+          build/Nameplate.app/Contents/MacOS/Nameplate > launch.log 2>&1 &
+          pid=$!
+          sleep 15
+          if kill -0 "$pid" 2>/dev/null; then
+            echo "Nameplate is running after 15 seconds." | tee -a launch.log
+            kill "$pid" || true
+          else
+            code=0
+            wait "$pid" || code=$?
+            echo "Nameplate stopped with exit code $code." | tee -a launch.log
+            ls -t ~/Library/Logs/DiagnosticReports/ 2>/dev/null | grep -i nameplate | head -1 | while read -r report; do
+              head -120 ~/Library/Logs/DiagnosticReports/"$report" >> launch.log
+            done
+            exit 1
+          fi
 
       - name: Package the app
         shell: bash
@@ -85,7 +113,7 @@ jobs:
           fi
 
       - name: Publish a release for a new version
-        if: github.ref == 'refs/heads/main' && steps.version.outputs.released == 'false'
+        if: github.ref == 'refs/heads/main' && steps.version.outputs.released == 'false' && steps.launch.outcome == 'success'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.version.outputs.version }}
@@ -106,3 +134,28 @@ jobs:
           files: |
             build/Nameplate.zip
             build/Nameplate.dmg
+
+      # Leaves the results on the build-status branch, so they can be read with plain git.
+      - name: Save the build result
+        if: always()
+        shell: bash
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          out="$RUNNER_TEMP/build-status"
+          rm -rf "$out" && mkdir -p "$out" && cd "$out"
+          git init -q
+          {
+            echo "commit: $GITHUB_SHA"
+            echo "job: ${{ job.status }}"
+            echo "build: ${{ steps.build.outcome }}"
+            echo "check: ${{ steps.check.outcome }}"
+            echo "launch: ${{ steps.launch.outcome }}"
+          } > status.txt
+          for f in build.log check.log launch.log; do
+            if [ -f "$GITHUB_WORKSPACE/$f" ]; then cp "$GITHUB_WORKSPACE/$f" .; fi
+          done
+          if [ -f build.log ]; then grep -E 'error:|warning:' build.log | sort -u > problems.txt || true; fi
+          git add -A
+          git -c user.name="github-actions" -c user.email="actions@github.com" commit -q -m "Build result for $GITHUB_SHA"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/build-status
