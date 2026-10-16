@@ -12,7 +12,7 @@ if [ ! -d .git ]; then
   exit 1
 fi
 
-printf "\n\033[1m%s\033[0m\n" "Getting the latest Nameplate…"
+printf "\n\033[1m%s\033[0m\n" "Getting the latest Nameplate..."
 if ! git pull --ff-only; then
   printf "\n\033[1;31m%s\033[0m\n" "Couldn't update. If you changed files in this folder, run: git stash   then try again."
   exit 1

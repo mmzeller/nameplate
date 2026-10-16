@@ -68,7 +68,7 @@ if [ "$INSTALL" = 1 ]; then
     echo "    Linked /usr/local/bin/nameplate"
   else
     echo "    For the 'nameplate' Terminal command, right-click the menu bar icon and choose"
-    echo "    Install Command-Line Tool…, or run:"
+    echo "    Install Command-Line Tool..., or run:"
     echo "    sudo mkdir -p /usr/local/bin && sudo ln -sf \"$TOOL\" /usr/local/bin/nameplate"
   fi
   open "$DEST/Nameplate.app"
