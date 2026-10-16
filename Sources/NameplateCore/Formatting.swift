@@ -203,9 +203,12 @@ public struct InfoLine: Identifiable, Equatable, Sendable {
     public var warn: Bool
     /// A second value for the line above (e.g. another DNS server); it shares that label.
     public var isContinuation: Bool
+    /// Belongs to a network interface block (drawn indented when labels are hidden).
+    public var isInterfaceDetail: Bool
 
     public init(id: Int = 0, kind: Kind, label: String = "", value: String = "",
-                fraction: Double? = nil, warn: Bool = false, isContinuation: Bool = false) {
+                fraction: Double? = nil, warn: Bool = false, isContinuation: Bool = false,
+                isInterfaceDetail: Bool = false) {
         self.id = id
         self.kind = kind
         self.label = label
@@ -213,6 +216,7 @@ public struct InfoLine: Identifiable, Equatable, Sendable {
         self.fraction = fraction
         self.warn = warn
         self.isContinuation = isContinuation
+        self.isInterfaceDetail = isInterfaceDetail
     }
 }
 
@@ -418,7 +422,8 @@ public enum InfoFormatter {
                     break
                 }
                 for (index, value) in values.filter({ !$0.isEmpty }).enumerated() {
-                    out.append(InfoLine(kind: .row, label: index == 0 ? label : "", value: value, isContinuation: index > 0))
+                    out.append(InfoLine(kind: .row, label: index == 0 ? label : "", value: value,
+                                        isContinuation: index > 0, isInterfaceDetail: true))
                 }
             }
         }
@@ -431,23 +436,19 @@ public enum InfoFormatter {
     public static func plainText(_ lines: [InfoLine]) -> String {
         var out: [String] = []
         var lastLabel = ""
-        var insideInterface = false
         for line in lines {
             switch line.kind {
             case .section:
                 if let last = out.last, !last.isEmpty { out.append("") }
                 out.append(line.value.uppercased())
-                insideInterface = false
             case .subheader:
                 out.append(line.value + ":")
-                insideInterface = true
             case .spacer:
                 out.append("")
-                insideInterface = false
             case .row:
                 let label = line.isContinuation ? lastLabel : line.label.trimmingCharacters(in: .whitespaces)
                 if !line.isContinuation { lastLabel = label }
-                let indent = insideInterface ? "  " : ""
+                let indent = line.isInterfaceDetail ? "  " : ""
                 out.append(label.isEmpty ? indent + line.value : "\(indent)\(label): \(line.value)")
             }
         }

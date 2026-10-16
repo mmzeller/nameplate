@@ -91,11 +91,14 @@ struct DesktopStyle: Equatable {
         textColor.luminance > 0.5 ? NSColor(white: 0, alpha: 0.75) : NSColor(white: 1, alpha: 0.7)
     }
 
+    /// Room around the text for its shadow when there's no background panel.
+    static let shadowRoom: CGFloat = 6
+
     /// Space between the window edge and the text: room for the shadow, or the panel's padding.
-    var contentInset: CGFloat { background == .off ? TextBlock.shadowRoom : padding }
+    var contentInset: CGFloat { background == .off ? DesktopStyle.shadowRoom : padding }
 
     /// How far the window edge sits outside the margin (so text, not shadow room, lines up with it).
-    var edgeOffset: CGFloat { background == .off ? TextBlock.shadowRoom : 0 }
+    var edgeOffset: CGFloat { background == .off ? DesktopStyle.shadowRoom : 0 }
 }
 
 /// Lays out the lines in two columns (labels right-aligned, values left-aligned), with
@@ -112,8 +115,6 @@ struct TextBlock {
         var fraction: CGFloat
         var warn: Bool
     }
-
-    static let shadowRoom: CGFloat = 6
 
     private(set) var pieces: [Piece] = []
     private(set) var bars: [Bar] = []
@@ -167,27 +168,23 @@ struct TextBlock {
         }
         var rows: [Row] = []
         var y: CGFloat = 0
-        var insideInterface = false
 
         for line in lines {
             switch line.kind {
             case .spacer:
                 y += round(style.fontSize * 0.7 * max(style.lineSpacing, 0.5))
-                insideInterface = false
             case .section:
                 if y > 0 { y += round(style.fontSize * 0.45) }
                 let text = NSAttributedString(string: line.value, attributes: headingAttrs)
                 let textSize = text.size()
                 rows.append(Row(pieces: [Piece(text: text, origin: CGPoint(x: 0, y: y))], bars: [], width: ceil(textSize.width)))
                 y += ceil(textSize.height) + lineGap
-                insideInterface = false
             case .subheader:
                 if y > 0 { y += round(style.fontSize * 0.35) }
                 let text = NSAttributedString(string: line.value, attributes: subheaderAttrs)
                 let textSize = text.size()
                 rows.append(Row(pieces: [Piece(text: text, origin: CGPoint(x: 0, y: y))], bars: [], width: ceil(textSize.width)))
                 y += ceil(textSize.height) + lineGap
-                insideInterface = true
             case .row:
                 var rowPieces: [Piece] = []
                 let value = NSAttributedString(string: line.value, attributes: valueAttrs)
@@ -199,7 +196,7 @@ struct TextBlock {
                     rowPieces.append(Piece(text: label, origin: CGPoint(x: valueX - columnGap - ceil(labelSize.width), y: y)))
                     height = max(height, ceil(labelSize.height))
                 }
-                let x = showLabels ? valueX : (insideInterface ? indent : 0)
+                let x = showLabels ? valueX : (line.isInterfaceDetail ? indent : 0)
                 rowPieces.append(Piece(text: value, origin: CGPoint(x: x, y: y)))
                 var end = x + ceil(valueSize.width)
                 var rowBars: [Bar] = []

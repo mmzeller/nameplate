@@ -147,21 +147,17 @@ layout.entries.removeAll { entry in
 }
 let lines = InfoFormatter.lines(layout: layout, input: input, settings: .everything)
 let labelWidth = lines.filter { $0.kind == .row }.map { $0.label.count }.max() ?? 0
-var insideInterface = false
 for line in lines {
     switch line.kind {
     case .section:
         if line.id > 0 { print("") }
         print("\(bold)\(accent)\(line.value.uppercased())\(reset)")
-        insideInterface = false
     case .subheader:
         print("\(bold)\(line.value)\(reset)")
-        insideInterface = true
     case .spacer:
         print("")
-        insideInterface = false
     case .row:
-        let indent = insideInterface ? "  " : ""
+        let indent = line.isInterfaceDetail ? "  " : ""
         let width = max(0, labelWidth - indent.count)
         let label = line.label.padding(toLength: width, withPad: " ", startingAt: 0)
         print("\(indent)\(dim)\(label)\(reset)  \(line.value)")

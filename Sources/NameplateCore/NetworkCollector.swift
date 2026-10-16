@@ -31,7 +31,7 @@ public enum NetworkCollector {
         }
 
         let macAddresses = LinkLayer.hardwareAddresses()
-        let wifiNames = CWWiFiClient.interfaceNames() ?? []
+        let wifiNames = (CWWiFiClient.shared().interfaces() ?? []).compactMap { $0.interfaceName }
         var interfaces: [InterfaceInfo] = []
 
         for sid in serviceIDs {
