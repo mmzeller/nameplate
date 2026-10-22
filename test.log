@@ -1,0 +1,98 @@
+Building for debugging...
+[0/17] Write sources
+[0/17] /Users/runner/work/nameplate/nameplate/.build/arm64-apple-macosx/debug/NameplatePackageTests.derived/runner.swift
+[0/17] Write sources
+[3/17] Write NameplateCLI-entitlement.plist
+[6/17] Write sources
+[7/17] Write Nameplate-entitlement.plist
+[8/17] Write swift-version--79AA4F9932D1E87A.txt
+[10/25] Compiling NameplateCore CommandRunner.swift
+[11/25] Compiling NameplateCore Formatting.swift
+[12/25] Compiling NameplateCore Layout.swift
+[13/25] Compiling NameplateCore LiveSampler.swift
+[14/25] Emitting module NameplateCore
+[15/25] Compiling NameplateCore LowLevel.swift
+[16/25] Compiling NameplateCore Models.swift
+[17/25] Compiling NameplateCore NetworkCollector.swift
+[18/28] Compiling NameplateCore Placement.swift
+[19/28] Compiling NameplateCore PublicIP.swift
+[20/28] Compiling NameplateCore SystemCollector.swift
+[21/43] Emitting module NameplateCLI
+[22/43] Compiling NameplateCLI main.swift
+[22/43] Write Objects.LinkFileList
+[23/43] Linking NameplateCLI
+[24/43] Applying NameplateCLI
+[26/43] Emitting module Nameplate
+[27/43] Compiling Nameplate InfoPanelView.swift
+[28/43] Compiling Nameplate InfoStore.swift
+[29/43] Compiling Nameplate Looks.swift
+[30/43] Compiling Nameplate NameplateApp.swift
+[31/47] Compiling Nameplate AppDelegate.swift
+[32/47] Compiling Nameplate ChangeMonitor.swift
+[33/47] Compiling Nameplate DesktopController.swift
+[34/47] Compiling Nameplate Displays.swift
+[35/47] Compiling Nameplate HotKeys.swift
+[36/47] Compiling Nameplate Prefs.swift
+[37/47] Compiling Nameplate SettingsView.swift
+[38/47] Compiling Nameplate StatusController.swift
+[39/47] Compiling Nameplate Support.swift
+[39/47] Write Objects.LinkFileList
+[40/47] Linking Nameplate
+[41/47] Applying Nameplate
+[43/47] Compiling NameplateCoreTests PlacementTests.swift
+[44/47] Emitting module NameplateCoreTests
+[45/47] Compiling NameplateCoreTests LeakTests.swift
+[46/49] Emitting module NameplatePackageTests
+[47/49] Compiling NameplatePackageTests runner.swift
+[47/49] Write Objects.LinkFileList
+[48/49] Linking NameplatePackageTests
+Build complete! (31.43s)
+Test Suite 'All tests' started at 2026-10-22 13:40:07.235.
+Test Suite 'NameplatePackageTests.xctest' started at 2026-10-22 13:40:07.237.
+Test Suite 'LeakTests' started at 2026-10-22 13:40:07.237.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerClosesFileHandles]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerClosesFileHandles]' passed (48.275 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerDoesNotWaitForBackgroundPrograms]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerDoesNotWaitForBackgroundPrograms]' passed (0.162 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerKeepsBigOutputBounded]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerKeepsBigOutputBounded]' passed (0.454 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerTimesOut]' started.
+Test Case '-[NameplateCoreTests.LeakTests testCommandRunnerTimesOut]' passed (1.266 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testDamagedLayoutIsIgnoredSafely]' started.
+Test Case '-[NameplateCoreTests.LeakTests testDamagedLayoutIsIgnoredSafely]' passed (0.011 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testFullHardwareReadDoesNotLeak]' started.
+Test Case '-[NameplateCoreTests.LeakTests testFullHardwareReadDoesNotLeak]' passed (1.386 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testPlaceholdersAreJustText]' started.
+Test Case '-[NameplateCoreTests.LeakTests testPlaceholdersAreJustText]' passed (0.003 seconds).
+Test Case '-[NameplateCoreTests.LeakTests testRepeatedSamplingDoesNotLeak]' started.
+Test Case '-[NameplateCoreTests.LeakTests testRepeatedSamplingDoesNotLeak]' passed (4.212 seconds).
+Test Suite 'LeakTests' passed at 2026-10-22 13:41:03.008.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 55.770 (55.771) seconds
+Test Suite 'PlacementTests' started at 2026-10-22 13:41:03.008.
+Test Case '-[NameplateCoreTests.PlacementTests testDroppingAnywhereSavesThatExactSpot]' started.
+Test Case '-[NameplateCoreTests.PlacementTests testDroppingAnywhereSavesThatExactSpot]' passed (0.002 seconds).
+Test Case '-[NameplateCoreTests.PlacementTests testEachCornerComesBackTheSameOnBothDisplays]' started.
+Test Case '-[NameplateCoreTests.PlacementTests testEachCornerComesBackTheSameOnBothDisplays]' passed (0.000 seconds).
+Test Case '-[NameplateCoreTests.PlacementTests testSavedPositionsSurviveStorage]' started.
+Test Case '-[NameplateCoreTests.PlacementTests testSavedPositionsSurviveStorage]' passed (0.000 seconds).
+Test Case '-[NameplateCoreTests.PlacementTests testTooBigForTheScreenKeepsTheTopLeftVisible]' started.
+Test Case '-[NameplateCoreTests.PlacementTests testTooBigForTheScreenKeepsTheTopLeftVisible]' passed (0.000 seconds).
+Test Case '-[NameplateCoreTests.PlacementTests testWideMonitorSpotStaysOnTheLaptopScreen]' started.
+Test Case '-[NameplateCoreTests.PlacementTests testWideMonitorSpotStaysOnTheLaptopScreen]' passed (0.000 seconds).
+Test Suite 'PlacementTests' passed at 2026-10-22 13:41:03.010.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'NameplatePackageTests.xctest' passed at 2026-10-22 13:41:03.010.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 55.773 (55.774) seconds
+Test Suite 'All tests' passed at 2026-10-22 13:41:03.010.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 55.773 (55.776) seconds
+RESULT commands: 300 runs, open files 8 -> 8
+RESULT background program: returned after 0.2 s
+RESULT timeout: stopped after 1.3 s, said "Timed out after 1 seconds"
+RESULT full read: 150 complete reads (hardware, graphics, disks, network); memory 26.7 MB -> 26.7 MB, Mach ports 71 -> 71
+RESULT sampling: 3000 live samples, 300 full refreshes, 3000 redraws; memory 26.7 MB -> 26.0 MB, Mach ports 72 -> 71, open files 8 -> 8
+RESULT placement: 162 drop spots across both displays redraw exactly where they were dropped
+RESULT placement: all four corners land on screen and save back unchanged on both displays
+◇ Test run started.
+↳ Testing Library Version: 124.4
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests passed after 0.001 seconds.

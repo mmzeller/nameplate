@@ -1,0 +1,27 @@
+still running after 4 minutes: yes
+== after 45 seconds (leaks exit 0)
+Physical footprint:         40.5M
+Physical footprint (peak):  42.0M
+Process 3307: 130274 nodes malloced for 17731 KB
+Process 3307: 0 leaks for 0 total leaked bytes.
+== after 4 minutes (leaks exit 0)
+Physical footprint:         41.4M
+Physical footprint (peak):  42.8M
+Process 3307: 132359 nodes malloced for 17878 KB
+Process 3307: 0 leaks for 0 total leaked bytes.
+== resident memory every 15 seconds
+60 s: 92672 KB
+75 s: 92768 KB
+90 s: 92992 KB
+105 s: 92976 KB
+120 s: 86720 KB
+135 s: 86736 KB
+150 s: 86736 KB
+165 s: 86768 KB
+180 s: 86800 KB
+195 s: 86832 KB
+210 s: 86864 KB
+225 s: 86848 KB
+== details of anything leaked (after 4 minutes)
+Process 3307: 0 leaks for 0 total leaked bytes.
+
