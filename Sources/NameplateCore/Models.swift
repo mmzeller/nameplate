@@ -1,7 +1,7 @@
 import Foundation
 
 public enum NameplateInfo {
-    public static let version = "1.1.2"
+    public static let version = "1.1.3"
     public static let bundleIdentifier = "com.mmzeller.Nameplate"
 }
 

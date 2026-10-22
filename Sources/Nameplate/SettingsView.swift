@@ -261,10 +261,7 @@ private struct EntryRow: View {
 @MainActor
 private struct AppearanceTab: View {
     @AppStorage(PrefKey.showOnDesktop) private var showOnDesktop = true
-    @AppStorage(PrefKey.desktopPosition) private var position = DesktopPosition.bottomLeft.rawValue
-    @AppStorage(PrefKey.desktopScreens) private var screens = ScreenChoice.main.rawValue
-    @AppStorage(PrefKey.marginX) private var marginX = 28.0
-    @AppStorage(PrefKey.marginY) private var marginY = 28.0
+    @AppStorage(PrefKey.desktopScreens) private var screens = ScreenSelection.menuBarDisplay.rawValue
     @AppStorage(PrefKey.fontFamily) private var fontFamily = FontChoice.system
     @AppStorage(PrefKey.fontSize) private var fontSize = 12.0
     @AppStorage(PrefKey.fontWeight) private var fontWeight = FontWeightChoice.regular.rawValue
@@ -287,8 +284,13 @@ private struct AppearanceTab: View {
     @State private var savedNames: [String] = []
     @State private var naming = false
     @State private var newName = ""
+    @State private var displays: [Displays.Info] = []
+    @State private var adjustKey = ""
+    /// Bumped whenever settings change, so per-display positions shown here stay current.
+    @State private var revision = 0
 
     var body: some View {
+        let _ = revision
         Form {
             Section {
                 HStack {
@@ -339,21 +341,54 @@ private struct AppearanceTab: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Placement") {
+            Section {
+                Picker("Show on", selection: $screens) {
+                    Text("Display with the menu bar").tag(ScreenSelection.menuBarDisplay.rawValue)
+                    Text("Every display").tag(ScreenSelection.every.rawValue)
+                    Divider()
+                    ForEach(displayChoices, id: \.tag) { choice in
+                        Text(choice.title).tag(choice.tag)
+                    }
+                }
+                if ScreenSelection(screens) == .every && displays.count > 1 {
+                    Picker("Adjust position on", selection: $adjustKey) {
+                        ForEach(displays) { display in
+                            Text(display.name).tag(display.key)
+                        }
+                    }
+                }
                 HStack {
                     Button("Move on Screen…") { app?.beginMoveDesktop() }
                     Text("Drag it anywhere; it stays put relative to the nearest corner.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Picker("Corner", selection: $position) {
-                    ForEach(DesktopPosition.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                if let target = adjustTarget {
+                    Picker("Corner", selection: cornerBinding(target.key)) {
+                        ForEach(DesktopPosition.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
+                    }
+                    slider("Side margin", value: offsetBinding(target.key, \.x),
+                           range: 0...Double(max(100, target.screen.visibleFrame.width - 60)), step: 1, unit: "pt")
+                    slider("Top / bottom margin", value: offsetBinding(target.key, \.y),
+                           range: 0...Double(max(100, target.screen.visibleFrame.height - 40)), step: 1, unit: "pt")
+                    HStack {
+                        Text(Prefs.hasOwnPlacement(target.key)
+                             ? "Position saved for \(target.name)."
+                             : "\(target.name) uses the standard position.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        if Prefs.hasOwnPlacement(target.key) {
+                            Button("Reset Position") { Prefs.removePlacement(forDisplay: target.key) }
+                        }
+                    }
                 }
-                Picker("Show on", selection: $screens) {
-                    ForEach(ScreenChoice.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
-                }
-                slider("Side margin", value: $marginX, range: 0...1200, unit: "pt")
-                slider("Top / bottom margin", value: $marginY, range: 0...1200, unit: "pt")
+            } header: {
+                Text("Placement")
+            } footer: {
+                Text("Each display keeps its own position, and the info always stays fully on screen.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             .disabled(!showOnDesktop)
 
@@ -411,6 +446,15 @@ private struct AppearanceTab: View {
         .onAppear {
             if families.isEmpty { families = NSFontManager.shared.availableFontFamilies.sorted() }
             savedNames = Looks.savedNames
+            displays = Displays.all()
+            if !displays.contains(where: { $0.key == adjustKey }) { adjustKey = displays.first?.key ?? "" }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
+            displays = Displays.all()
+            if !displays.contains(where: { $0.key == adjustKey }) { adjustKey = displays.first?.key ?? "" }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
+            revision &+= 1
         }
         .alert("Save Look", isPresented: $naming) {
             TextField("Name", text: $newName)
@@ -438,6 +482,60 @@ private struct AppearanceTab: View {
                     .frame(width: 60, alignment: .trailing)
             }
         }
+    }
+
+    // MARK: Placement helpers
+
+    private struct DisplayChoice {
+        let tag: String
+        let title: String
+    }
+
+    /// Each connected display, plus the chosen one if it's unplugged right now.
+    private var displayChoices: [DisplayChoice] {
+        var choices = displays.map { display in
+            DisplayChoice(tag: ScreenSelection.display(display.key).rawValue,
+                          title: display.hasMenuBar ? "\(display.name) only (has the menu bar)" : "\(display.name) only")
+        }
+        if case .display(let key) = ScreenSelection(screens), !displays.contains(where: { $0.key == key }) {
+            let name = Prefs.displayName(key) ?? "Display"
+            choices.append(DisplayChoice(tag: screens, title: "\(name) only (not connected)"))
+        }
+        return choices
+    }
+
+    /// The display whose position the controls below are changing.
+    private var adjustTarget: Displays.Info? {
+        switch ScreenSelection(screens) {
+        case .menuBarDisplay:
+            return displays.first
+        case .display(let key):
+            return displays.first { $0.key == key } ?? displays.first
+        case .every:
+            return displays.first { $0.key == adjustKey } ?? displays.first
+        }
+    }
+
+    private func cornerBinding(_ key: String) -> Binding<String> {
+        Binding(
+            get: { Prefs.placement(forDisplay: key).corner.rawValue },
+            set: { raw in
+                var placement = Prefs.placement(forDisplay: key)
+                placement.corner = DesktopPosition(rawValue: raw) ?? placement.corner
+                Prefs.setPlacement(placement, forDisplay: key)
+            }
+        )
+    }
+
+    private func offsetBinding(_ key: String, _ path: WritableKeyPath<Placement, CGFloat>) -> Binding<Double> {
+        Binding(
+            get: { Double(Prefs.placement(forDisplay: key)[keyPath: path]) },
+            set: { value in
+                var placement = Prefs.placement(forDisplay: key)
+                placement[keyPath: path] = CGFloat(value.rounded())
+                Prefs.setPlacement(placement, forDisplay: key)
+            }
+        )
     }
 
     private func optionalColor(_ title: String, hex: Binding<String>, suggestion: String) -> some View {

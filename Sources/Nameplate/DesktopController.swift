@@ -21,10 +21,11 @@ struct DesktopStyle: Equatable {
     var backgroundOpacity: CGFloat
     var cornerRadius: CGFloat
     var padding: CGFloat
-    var position: DesktopPosition
-    var screens: ScreenChoice
-    var marginX: CGFloat
-    var marginY: CGFloat
+    var screens: ScreenSelection
+    /// For displays you haven't positioned the info on yourself.
+    var defaultPlacement: Placement
+    /// Positions you've set per display, by display key.
+    var placements: [String: Placement]
 
     private var weight: NSFont.Weight {
         switch fontWeight {
@@ -284,7 +285,12 @@ final class DesktopContentView: NSView {
     private var dragStartMouse: NSPoint?
     private var dragStartOrigin: NSPoint?
 
-    var onMoved: ((NSWindow) -> Void)?
+    /// The display this copy of the info belongs to.
+    var displayKey = ""
+    /// When set, dragging stays inside this area (each display keeps its own copy).
+    var dragLimit: NSRect?
+    var isDragging: Bool { dragStartMouse != nil }
+    var onMoved: ((NSWindow, String) -> Void)?
     var isMoving = false {
         didSet {
             outline.isHidden = !isMoving
@@ -391,7 +397,11 @@ final class DesktopContentView: NSView {
     override func mouseDragged(with event: NSEvent) {
         guard isMoving, let window, let startMouse = dragStartMouse, let startOrigin = dragStartOrigin else { return }
         let mouse = NSEvent.mouseLocation
-        window.setFrameOrigin(NSPoint(x: startOrigin.x + mouse.x - startMouse.x, y: startOrigin.y + mouse.y - startMouse.y))
+        var origin = NSPoint(x: startOrigin.x + mouse.x - startMouse.x, y: startOrigin.y + mouse.y - startMouse.y)
+        if let limit = dragLimit {
+            origin = Placement.clamp(origin, size: window.frame.size, in: limit)
+        }
+        window.setFrameOrigin(origin)
     }
 
     override func mouseUp(with event: NSEvent) {
@@ -399,23 +409,25 @@ final class DesktopContentView: NSView {
         NSCursor.pop()
         dragStartMouse = nil
         dragStartOrigin = nil
-        onMoved?(window)
+        onMoved?(window, displayKey)
     }
 }
 
 /// Puts the information on the desktop: above the wallpaper, below desktop icons
 /// and every app window, on every Space, ignoring the mouse (except while you move it).
+/// Each display gets its own window and its own position.
 @MainActor
 final class DesktopController {
-    private var windows: [NSWindow] = []
+    private var windows: [String: NSWindow] = [:]   // by display key
     private var lines: [InfoLine] = []
     private var style: DesktopStyle?
     private var enabled = false
     private var donePanel: NSPanel?
 
     private(set) var isMoving = false
-    /// Called after a drag with the nearest corner and the margins from it.
-    var onMoveFinished: ((DesktopPosition, CGFloat, CGFloat) -> Void)?
+    /// Called after a drag with the display, its new position, and (when the info was
+    /// dragged onto another display) the new choice of display to show it on.
+    var onMoveFinished: ((String, Placement, ScreenSelection?) -> Void)?
 
     func update(lines: [InfoLine], style: DesktopStyle, enabled: Bool) {
         self.lines = lines
@@ -447,7 +459,7 @@ final class DesktopController {
     }
 
     private func showDonePanel() {
-        let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 360, height: 70),
+        let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 70),
                             styleMask: [.titled, .nonactivatingPanel, .utilityWindow],
                             backing: .buffered, defer: false)
         panel.title = "Move Desktop Info"
@@ -455,8 +467,10 @@ final class DesktopController {
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.contentView = NSHostingView(rootView: MoveHelpView(done: { [weak self] in self?.endMove() }))
-        if let screen = NSScreen.main {
+        let several = style?.screens == .every && windows.count > 1
+        panel.contentView = NSHostingView(rootView: MoveHelpView(eachDisplay: several, done: { [weak self] in self?.endMove() }))
+        // Put the instructions on the display where the info is.
+        if let screen = windows.values.first?.screen ?? NSScreen.screens.first {
             let area = screen.visibleFrame
             panel.setFrameOrigin(NSPoint(x: area.midX - panel.frame.width / 2, y: area.maxY - panel.frame.height - 40))
         }
@@ -464,20 +478,48 @@ final class DesktopController {
         donePanel = panel
     }
 
-    private func windowMoved(_ window: NSWindow) {
-        guard let style, let screen = window.screen ?? NSScreen.main else { return }
-        let area = screen.visibleFrame
+    /// The displays that should show the info right now.
+    private func targets(for style: DesktopStyle) -> [Displays.Info] {
+        let displays = Displays.all()
+        switch style.screens {
+        case .every:
+            return displays
+        case .menuBarDisplay:
+            return Array(displays.prefix(1))
+        case .display(let key):
+            let match = displays.filter { $0.key == key }
+            // If that display isn't connected, fall back to the one with the menu bar.
+            return match.isEmpty ? Array(displays.prefix(1)) : match
+        }
+    }
+
+    private func windowMoved(_ window: NSWindow, displayKey: String) {
+        guard let style else { return }
         let frame = window.frame
-        let left = frame.minX - area.minX
-        let right = area.maxX - frame.maxX
-        let bottom = frame.minY - area.minY
-        let top = area.maxY - frame.maxY
-        let isLeft = left <= right
-        let isBottom = bottom <= top
-        let position: DesktopPosition = isBottom ? (isLeft ? .bottomLeft : .bottomRight) : (isLeft ? .topLeft : .topRight)
-        let marginX = max(0, (isLeft ? left : right) + style.edgeOffset)
-        let marginY = max(0, (isBottom ? bottom : top) + style.edgeOffset)
-        onMoveFinished?(position, round(marginX), round(marginY))
+        var newSelection: ScreenSelection?
+        let target: Displays.Info?
+        if style.screens == .every {
+            // Each display has its own copy, and dragging kept it on its display.
+            target = Displays.all().first { $0.key == displayKey }
+        } else {
+            // One copy: it goes to whichever display you dropped it on.
+            target = Displays.info(containing: NSPoint(x: frame.midX, y: frame.midY))
+            if let target, target.key != targets(for: style).first?.key {
+                newSelection = target.hasMenuBar ? .menuBarDisplay : .display(target.key)
+            }
+        }
+        guard let target else { return }
+        let area = target.screen.visibleFrame
+        let onScreen = NSRect(origin: Placement.clamp(frame.origin, size: frame.size, in: area), size: frame.size)
+        let placement = Placement.nearest(to: onScreen, in: area, edgeOffset: style.edgeOffset)
+
+        // Use the new spot right away, so nothing flickers back while the setting saves.
+        var updated = style
+        updated.placements[target.key] = placement
+        if let newSelection { updated.screens = newSelection }
+        self.style = updated
+        layout()
+        onMoveFinished?(target.key, placement, newSelection)
     }
 
     // MARK: Windows
@@ -494,8 +536,8 @@ final class DesktopController {
         window.level = DesktopController.desktopLevel
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenNone]
         let content = DesktopContentView(frame: window.contentLayoutRect)
-        content.onMoved = { [weak self] movedWindow in
-            self?.windowMoved(movedWindow)
+        content.onMoved = { [weak self] movedWindow, displayKey in
+            self?.windowMoved(movedWindow, displayKey: displayKey)
         }
         window.contentView = content
         return window
@@ -505,41 +547,48 @@ final class DesktopController {
 
     private func layout() {
         guard enabled, let style, !lines.isEmpty else {
-            windows.forEach { $0.orderOut(nil) }
+            windows.values.forEach { $0.orderOut(nil) }
             windows.removeAll()
             return
         }
-        let screens = style.screens == .all ? NSScreen.screens : Array(NSScreen.screens.prefix(1))
-        while windows.count < screens.count { windows.append(makeWindow()) }
-        while windows.count > screens.count { windows.removeLast().orderOut(nil) }
+        let targets = targets(for: style)
+        let wanted = Set(targets.map { $0.key })
+        for (key, window) in windows where !wanted.contains(key) {
+            window.orderOut(nil)
+            windows[key] = nil
+        }
 
-        let rightAligned = style.position == .topRight || style.position == .bottomRight
-        let block = TextBlock(lines: lines, style: style, rightAligned: rightAligned)
         let inset = style.contentInset
-        let size = CGSize(width: block.size.width + inset * 2, height: block.size.height + inset * 2)
+        var blocks: [Bool: TextBlock] = [:]
+        for target in targets {
+            let window = windows[target.key] ?? makeWindow()
+            windows[target.key] = window
+            guard let content = window.contentView as? DesktopContentView else { continue }
 
-        for (window, screen) in zip(windows, screens) {
-            let area = screen.visibleFrame
-            let mx = style.marginX - style.edgeOffset
-            let my = style.marginY - style.edgeOffset
-            var origin = CGPoint.zero
-            switch style.position {
-            case .topLeft:
-                origin = CGPoint(x: area.minX + mx, y: area.maxY - my - size.height)
-            case .topRight:
-                origin = CGPoint(x: area.maxX - mx - size.width, y: area.maxY - my - size.height)
-            case .bottomLeft:
-                origin = CGPoint(x: area.minX + mx, y: area.minY + my)
-            case .bottomRight:
-                origin = CGPoint(x: area.maxX - mx - size.width, y: area.minY + my)
+            let placement = style.placements[target.key] ?? style.defaultPlacement
+            let rightAligned = placement.isRightAligned
+            let block = blocks[rightAligned] ?? TextBlock(lines: lines, style: style, rightAligned: rightAligned)
+            blocks[rightAligned] = block
+            let size = CGSize(width: block.size.width + inset * 2, height: block.size.height + inset * 2)
+            let area = target.screen.visibleFrame
+
+            content.displayKey = target.key
+            content.dragLimit = style.screens == .every ? area : nil
+            if content.isDragging {
+                // Never pull it out from under the pointer; just let it grow or shrink in place.
+                var frame = window.frame
+                if frame.size != size {
+                    frame.origin.y += frame.height - size.height
+                    frame.size = size
+                    window.setFrame(frame, display: false)
+                }
+            } else {
+                let frame = placement.frame(for: size, in: area, edgeOffset: style.edgeOffset)
+                if window.frame != frame { window.setFrame(frame, display: false) }
             }
-            let frame = NSRect(origin: origin, size: size).integral
-            if window.frame != frame { window.setFrame(frame, display: false) }
-            if let content = window.contentView as? DesktopContentView {
-                content.frame = NSRect(origin: .zero, size: frame.size)
-                content.apply(block: block, style: style)
-                if content.isMoving != isMoving { content.isMoving = isMoving }
-            }
+            content.frame = NSRect(origin: .zero, size: window.frame.size)
+            content.apply(block: block, style: style)
+            if content.isMoving != isMoving { content.isMoving = isMoving }
             window.ignoresMouseEvents = !isMoving
             window.level = isMoving ? .floating : DesktopController.desktopLevel
             window.orderFrontRegardless()
@@ -548,6 +597,7 @@ final class DesktopController {
 }
 
 private struct MoveHelpView: View {
+    let eachDisplay: Bool
     let done: @MainActor () -> Void
 
     var body: some View {
@@ -555,13 +605,16 @@ private struct MoveHelpView: View {
             Image(systemName: "hand.draw")
                 .font(.title2)
                 .foregroundStyle(.secondary)
-            Text("Drag the info to where you want it.")
+            Text(eachDisplay
+                 ? "Drag the info on each display to where you want it."
+                 : "Drag the info where you want it, even onto another display.")
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             Button("Done") { done() }
                 .keyboardShortcut(.defaultAction)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .frame(width: 360)
+        .frame(width: 400)
     }
 }

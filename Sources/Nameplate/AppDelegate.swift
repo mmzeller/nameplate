@@ -22,11 +22,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settings = SettingsWindowController(location: location)
 
         store.onUpdate = { [weak self] in self?.render() }
-        desktop.onMoveFinished = { position, marginX, marginY in
-            Prefs.defaults.set(position.rawValue, forKey: PrefKey.desktopPosition)
-            Prefs.defaults.set(Double(marginX), forKey: PrefKey.marginX)
-            Prefs.defaults.set(Double(marginY), forKey: PrefKey.marginY)
+        desktop.onMoveFinished = { displayKey, placement, newSelection in
+            Prefs.setPlacement(placement, forDisplay: displayKey)
+            if let newSelection {
+                Prefs.defaults.set(newSelection.rawValue, forKey: PrefKey.desktopScreens)
+            }
         }
+        rememberDisplays()
         monitor.onChange = { [weak self] reason in self?.systemChanged(reason) }
         location.onChange = { [weak self] in self?.scheduleRefresh() }
         monitor.start()
@@ -73,6 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func systemChanged(_ reason: ChangeMonitor.Reason) {
         switch reason {
         case .screens:
+            rememberDisplays()
             desktop.screensChanged()
         case .network, .wake:
             scheduleRefresh()
@@ -80,6 +83,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .volumes:
             scheduleRefresh()
         }
+    }
+
+    private func rememberDisplays() {
+        var names: [String: String] = [:]
+        for display in Displays.all() { names[display.key] = display.name }
+        Prefs.rememberDisplayNames(names)
     }
 
     /// Network changes arrive in bursts; wait for them to settle.

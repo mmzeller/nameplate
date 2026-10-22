@@ -12,6 +12,8 @@ enum PrefKey {
     static let desktopScreens = "DesktopScreens"
     static let marginX = "DesktopMarginX"
     static let marginY = "DesktopMarginY"
+    static let displayPlacements = "DisplayPlacements"  // display key -> {corner, x, y}
+    static let displayNames = "DisplayNames"            // display key -> name, for displays not connected right now
 
     // Desktop look
     static let fontFamily = "FontFamily"
@@ -61,23 +63,6 @@ enum PrefKey {
     static let legacyMenuBarStyle = "MenuBarStyle"
     static let legacySectionTitles = "ShowSectionTitles"
     static func legacyItem(_ item: InfoItem) -> String { "Show." + item.rawValue }
-}
-
-enum DesktopPosition: String, CaseIterable {
-    case topLeft, topRight, bottomLeft, bottomRight
-    var title: String {
-        switch self {
-        case .topLeft: return "Top left"
-        case .topRight: return "Top right"
-        case .bottomLeft: return "Bottom left"
-        case .bottomRight: return "Bottom right"
-        }
-    }
-}
-
-enum ScreenChoice: String, CaseIterable {
-    case main, all
-    var title: String { self == .main ? "Main display" : "Every display" }
 }
 
 enum TextColorChoice: String, CaseIterable {
@@ -153,7 +138,7 @@ enum Prefs {
         var values: [String: Any] = [
             PrefKey.showOnDesktop: true,
             PrefKey.desktopPosition: DesktopPosition.bottomLeft.rawValue,
-            PrefKey.desktopScreens: ScreenChoice.main.rawValue,
+            PrefKey.desktopScreens: ScreenSelection.menuBarDisplay.rawValue,
             PrefKey.marginX: 28.0,
             PrefKey.marginY: 28.0,
             PrefKey.interfaceScope: InterfaceScope.active.rawValue,
@@ -222,6 +207,62 @@ enum Prefs {
         HotKeySpec(string: string(key))
     }
 
+    // MARK: Desktop placement
+
+    /// Used on any display you haven't positioned the info on yourself.
+    static var defaultPlacement: Placement {
+        Placement(corner: DesktopPosition(rawValue: string(PrefKey.desktopPosition)) ?? .bottomLeft,
+                  x: CGFloat(max(0, double(PrefKey.marginX))),
+                  y: CGFloat(max(0, double(PrefKey.marginY))))
+    }
+
+    static func placements() -> [String: Placement] {
+        guard let stored = defaults.dictionary(forKey: PrefKey.displayPlacements) else { return [:] }
+        var result: [String: Placement] = [:]
+        for (key, value) in stored {
+            if let dictionary = value as? [String: Any], let placement = Placement(dictionary: dictionary) {
+                result[key] = placement
+            }
+        }
+        return result
+    }
+
+    static func placement(forDisplay key: String) -> Placement {
+        placements()[key] ?? defaultPlacement
+    }
+
+    static func hasOwnPlacement(_ key: String) -> Bool {
+        placements()[key] != nil
+    }
+
+    static func setPlacement(_ placement: Placement, forDisplay key: String) {
+        var stored = defaults.dictionary(forKey: PrefKey.displayPlacements) ?? [:]
+        stored[key] = placement.dictionary
+        defaults.set(stored, forKey: PrefKey.displayPlacements)
+    }
+
+    static func removePlacement(forDisplay key: String) {
+        var stored = defaults.dictionary(forKey: PrefKey.displayPlacements) ?? [:]
+        stored[key] = nil
+        defaults.set(stored, forKey: PrefKey.displayPlacements)
+    }
+
+    static var screenSelection: ScreenSelection {
+        ScreenSelection(string(PrefKey.desktopScreens))
+    }
+
+    /// Remembers display names, so Settings can name a display that's unplugged right now.
+    static func rememberDisplayNames(_ names: [String: String]) {
+        var stored = (defaults.dictionary(forKey: PrefKey.displayNames) as? [String: String]) ?? [:]
+        let before = stored
+        stored.merge(names) { _, new in new }
+        if stored != before { defaults.set(stored, forKey: PrefKey.displayNames) }
+    }
+
+    static func displayName(_ key: String) -> String? {
+        (defaults.dictionary(forKey: PrefKey.displayNames) as? [String: String])?[key]
+    }
+
     // MARK: Layout
 
     static func layout() -> Layout {
@@ -281,10 +322,9 @@ enum Prefs {
             backgroundOpacity: CGFloat(min(max(double(PrefKey.backgroundOpacity), 0), 1)),
             cornerRadius: CGFloat(min(max(double(PrefKey.backgroundCorner), 0), 40)),
             padding: CGFloat(min(max(double(PrefKey.backgroundPadding), 0), 60)),
-            position: DesktopPosition(rawValue: string(PrefKey.desktopPosition)) ?? .bottomLeft,
-            screens: ScreenChoice(rawValue: string(PrefKey.desktopScreens)) ?? .main,
-            marginX: CGFloat(max(0, double(PrefKey.marginX))),
-            marginY: CGFloat(max(0, double(PrefKey.marginY)))
+            screens: screenSelection,
+            defaultPlacement: defaultPlacement,
+            placements: placements()
         )
     }
 }

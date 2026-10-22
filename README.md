@@ -55,7 +55,9 @@ Everything is in Settings (click the menu bar icon, then the gear).
 
 The second list sets what each network interface shows, and in what order.
 
-**Appearance.** Font, weight, size, line spacing, text color, separate label and heading colors, opacity, shadow, and usage bars for disk, CPU, memory and battery. Add a **background panel**, either solid or frosted glass, with its own color, rounding and padding. **Move on Screen…** lets you drag the info anywhere; it stays put relative to the nearest corner.
+**Appearance.** Font, weight, size, line spacing, text color, separate label and heading colors, opacity, shadow, and usage bars for disk, CPU, memory and battery. Add a **background panel**, either solid or frosted glass, with its own color, rounding and padding.
+
+**Displays.** Show the info on the display with the menu bar, on one particular display, or on every display. **Move on Screen…** lets you drag it anywhere; it stays put relative to the nearest corner. Each display keeps its own position, so a spot that suits a wide monitor doesn't push it off a laptop screen, and the info always stays fully on screen. When it's on one display, dragging it onto another moves it there.
 
 **Looks.** Save the current fonts, colors and background as a named look and switch between looks any time. Built-in looks include Frosted Card, Terminal, Minimal, Big and Bold, and one for light wallpapers.
 
