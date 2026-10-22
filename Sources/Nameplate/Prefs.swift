@@ -13,6 +13,7 @@ enum PrefKey {
     static let marginX = "DesktopMarginX"
     static let marginY = "DesktopMarginY"
     static let displayPlacements = "DisplayPlacements"  // display key -> {corner, x, y}
+    static let displayTextSizes = "DisplayTextSizes"    // display key -> point size
     static let displayNames = "DisplayNames"            // display key -> name, for displays not connected right now
 
     // Desktop look
@@ -247,6 +248,34 @@ enum Prefs {
         defaults.set(stored, forKey: PrefKey.displayPlacements)
     }
 
+    /// Text sizes you've set per display. Displays without one use the standard size.
+    static func textSizes() -> [String: CGFloat] {
+        guard let stored = defaults.dictionary(forKey: PrefKey.displayTextSizes) else { return [:] }
+        var result: [String: CGFloat] = [:]
+        for (key, value) in stored {
+            if let number = value as? NSNumber {
+                result[key] = CGFloat(min(max(number.doubleValue, 8), 40))
+            }
+        }
+        return result
+    }
+
+    static func textSize(forDisplay key: String) -> CGFloat? {
+        textSizes()[key]
+    }
+
+    static func setTextSize(_ size: CGFloat, forDisplay key: String) {
+        var stored = defaults.dictionary(forKey: PrefKey.displayTextSizes) ?? [:]
+        stored[key] = Double(size)
+        defaults.set(stored, forKey: PrefKey.displayTextSizes)
+    }
+
+    static func removeTextSize(forDisplay key: String) {
+        var stored = defaults.dictionary(forKey: PrefKey.displayTextSizes) ?? [:]
+        stored[key] = nil
+        defaults.set(stored, forKey: PrefKey.displayTextSizes)
+    }
+
     static var screenSelection: ScreenSelection {
         ScreenSelection(string(PrefKey.desktopScreens))
     }
@@ -324,7 +353,8 @@ enum Prefs {
             padding: CGFloat(min(max(double(PrefKey.backgroundPadding), 0), 60)),
             screens: screenSelection,
             defaultPlacement: defaultPlacement,
-            placements: placements()
+            placements: placements(),
+            textSizes: textSizes()
         )
     }
 }

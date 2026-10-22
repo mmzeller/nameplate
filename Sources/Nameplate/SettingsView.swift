@@ -371,22 +371,26 @@ private struct AppearanceTab: View {
                            range: 0...Double(max(100, target.screen.visibleFrame.width - 60)), step: 1, unit: "pt")
                     slider("Top / bottom margin", value: offsetBinding(target.key, \.y),
                            range: 0...Double(max(100, target.screen.visibleFrame.height - 40)), step: 1, unit: "pt")
+                    if displays.count > 1 || Prefs.textSize(forDisplay: target.key) != nil {
+                        slider("Text size", value: textSizeBinding(target.key), range: 9...32, step: 1, unit: "pt")
+                    }
                     HStack {
-                        Text(Prefs.hasOwnPlacement(target.key)
-                             ? "Position saved for \(target.name)."
-                             : "\(target.name) uses the standard position.")
+                        Text(displaySummary(target))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        if Prefs.hasOwnPlacement(target.key) {
-                            Button("Reset Position") { Prefs.removePlacement(forDisplay: target.key) }
+                        if Prefs.hasOwnPlacement(target.key) || Prefs.textSize(forDisplay: target.key) != nil {
+                            Button("Reset to Standard") {
+                                Prefs.removePlacement(forDisplay: target.key)
+                                Prefs.removeTextSize(forDisplay: target.key)
+                            }
                         }
                     }
                 }
             } header: {
-                Text("Placement")
+                Text("Displays")
             } footer: {
-                Text("Each display keeps its own position, and the info always stays fully on screen.")
+                Text("Each display keeps its own position and text size, and the info always stays fully on screen.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -401,7 +405,7 @@ private struct AppearanceTab: View {
                 Picker("Weight", selection: $fontWeight) {
                     ForEach(FontWeightChoice.allCases, id: \.self) { Text($0.title).tag($0.rawValue) }
                 }
-                slider("Size", value: $fontSize, range: 9...32, step: 1, unit: "pt")
+                slider(displays.count > 1 ? "Standard size" : "Size", value: $fontSize, range: 9...32, step: 1, unit: "pt")
                 LabeledContent("Line spacing") {
                     HStack {
                         Slider(value: $lineSpacing, in: 0...3)
@@ -525,6 +529,24 @@ private struct AppearanceTab: View {
                 Prefs.setPlacement(placement, forDisplay: key)
             }
         )
+    }
+
+    private func textSizeBinding(_ key: String) -> Binding<Double> {
+        Binding(
+            get: { Double(Prefs.textSize(forDisplay: key) ?? CGFloat(fontSize)) },
+            set: { value in Prefs.setTextSize(CGFloat(value.rounded()), forDisplay: key) }
+        )
+    }
+
+    private func displaySummary(_ display: Displays.Info) -> String {
+        let ownPosition = Prefs.hasOwnPlacement(display.key)
+        let ownSize = Prefs.textSize(forDisplay: display.key) != nil
+        switch (ownPosition, ownSize) {
+        case (true, true): return "\(display.name) has its own position and text size."
+        case (true, false): return "\(display.name) has its own position and uses the standard text size."
+        case (false, true): return "\(display.name) has its own text size and uses the standard position."
+        case (false, false): return "\(display.name) uses the standard position and text size."
+        }
     }
 
     private func offsetBinding(_ key: String, _ path: WritableKeyPath<Placement, CGFloat>) -> Binding<Double> {

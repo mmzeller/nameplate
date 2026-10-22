@@ -26,6 +26,16 @@ struct DesktopStyle: Equatable {
     var defaultPlacement: Placement
     /// Positions you've set per display, by display key.
     var placements: [String: Placement]
+    /// Text sizes you've set per display, by display key. Others use `fontSize`.
+    var textSizes: [String: CGFloat]
+
+    /// This style as it applies to one display.
+    func forDisplay(_ key: String) -> DesktopStyle {
+        guard let size = textSizes[key], size != fontSize else { return self }
+        var copy = self
+        copy.fontSize = size
+        return copy
+    }
 
     private var weight: NSFont.Weight {
         switch fontWeight {
@@ -559,16 +569,19 @@ final class DesktopController {
         }
 
         let inset = style.contentInset
-        var blocks: [Bool: TextBlock] = [:]
+        // Displays with the same text size and alignment share one layout.
+        var blocks: [String: TextBlock] = [:]
         for target in targets {
             let window = windows[target.key] ?? makeWindow()
             windows[target.key] = window
             guard let content = window.contentView as? DesktopContentView else { continue }
 
+            let displayStyle = style.forDisplay(target.key)
             let placement = style.placements[target.key] ?? style.defaultPlacement
             let rightAligned = placement.isRightAligned
-            let block = blocks[rightAligned] ?? TextBlock(lines: lines, style: style, rightAligned: rightAligned)
-            blocks[rightAligned] = block
+            let blockKey = "\(rightAligned)-\(displayStyle.fontSize)"
+            let block = blocks[blockKey] ?? TextBlock(lines: lines, style: displayStyle, rightAligned: rightAligned)
+            blocks[blockKey] = block
             let size = CGSize(width: block.size.width + inset * 2, height: block.size.height + inset * 2)
             let area = target.screen.visibleFrame
 
@@ -587,7 +600,7 @@ final class DesktopController {
                 if window.frame != frame { window.setFrame(frame, display: false) }
             }
             content.frame = NSRect(origin: .zero, size: window.frame.size)
-            content.apply(block: block, style: style)
+            content.apply(block: block, style: displayStyle)
             if content.isMoving != isMoving { content.isMoving = isMoving }
             window.ignoresMouseEvents = !isMoving
             window.level = isMoving ? .floating : DesktopController.desktopLevel
